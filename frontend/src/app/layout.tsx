@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'JellyFlex 2.0 — Autonomous Omni-Channel Social & AI Agent Suite',
+  title: 'JellyFlex 2.0 — Local-First Conversational AI Agent Suite',
   description:
-    'Clean-room local-first social automation suite powered by Agno OS, Google Antigravity SDK & OpenClaw 7-Subsystems',
+    'Anthropic-styled conversational AI agent suite and social automation platform with clean-room zero-knowledge BYOK architecture',
 };
 
 export default function RootLayout({
@@ -13,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-canvas-light dark:bg-canvas-dark text-slate-900 dark:text-slate-100 antialiased font-sans transition-colors duration-300">
+    <html lang="en">
+      <body className="bg-[#FAF9F5] text-[#141413] antialiased font-sans">
         {children}
       </body>
     </html>

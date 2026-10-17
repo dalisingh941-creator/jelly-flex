@@ -1,7 +1,9 @@
-$screenshotPath = "C:\Users\ANURAG\.gemini\antigravity\brain\0acedb32-81e4-43c4-92f3-2695ed70e57a\jellyflex_anthropic_ui.png"
-$targetDir = Split-Path -Path $screenshotPath -Parent
-if (-not (Test-Path $targetDir)) {
-    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+$screenshotPath1 = "C:\Users\ANURAG\.gemini\antigravity\brain\0acedb32-81e4-43c4-92f3-2695ed70e57a\artifacts\jellyflex_ui_preview.png"
+$screenshotPath2 = "C:\Users\ANURAG\.gemini\antigravity\brain\0acedb32-81e4-43c4-92f3-2695ed70e57a\jellyflex_anthropic_ui.png"
+
+$targetDir1 = Split-Path -Path $screenshotPath1 -Parent
+if (-not (Test-Path $targetDir1)) {
+    New-Item -ItemType Directory -Path $targetDir1 -Force | Out-Null
 }
 
 $backendProc = Start-Process -FilePath ".venv\Scripts\python.exe" -ArgumentList "backend\main.py" -PassThru -WindowStyle Hidden
@@ -43,14 +45,15 @@ if (-not (Test-Path $chromePath)) {
     $chromePath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 }
 
-Write-Host "Capturing screenshot using $chromePath to $screenshotPath..."
-$browserArgs = "--headless --disable-gpu --hide-scrollbars --window-size=1600,1020 --screenshot=`"$screenshotPath`" http://localhost:3000"
+Write-Host "Capturing screenshot using $chromePath to $screenshotPath1..."
+$browserArgs = "--headless --disable-gpu --hide-scrollbars --window-size=1600,1020 --virtual-time-budget=8000 --screenshot=`"$screenshotPath1`" http://localhost:3000"
 Start-Process -FilePath $chromePath -ArgumentList $browserArgs -Wait
 
 Start-Sleep -Seconds 2
 
-if (Test-Path $screenshotPath) {
-    $fileInfo = Get-Item $screenshotPath
+if (Test-Path $screenshotPath1) {
+    Copy-Item $screenshotPath1 -Destination $screenshotPath2 -Force
+    $fileInfo = Get-Item $screenshotPath1
     Write-Host "Screenshot successfully captured: $($fileInfo.FullName) ($($fileInfo.Length) bytes)"
 } else {
     Write-Error "Screenshot failed to generate."
