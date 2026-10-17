@@ -14,6 +14,7 @@ class BYOKVaultManager:
         "openai": {"label": "OpenAI (GPT-4o / o3)", "env_var": "OPENAI_API_KEY"},
         "anthropic": {"label": "Anthropic Claude (Opus 5.5 / Sonnet)", "env_var": "ANTHROPIC_API_KEY"},
         "xai": {"label": "xAI Grok", "env_var": "XAI_API_KEY"},
+        "instagram": {"label": "Instagram Graph API Token", "env_var": "INSTAGRAM_ACCESS_TOKEN"},
         "openrouter": {"label": "OpenRouter (Universal Fallback)", "env_var": "OPENROUTER_API_KEY"},
         "ollama": {"label": "Local Ollama (100% Free Offline)", "env_var": "OLLAMA_BASE_URL"},
     }
@@ -109,3 +110,12 @@ class BYOKVaultManager:
                 "monthly_budget_usd": saved["budget"] if saved else 0.0,
             })
         return status_list
+
+    def has_configured_keys(self) -> bool:
+        """Returns True if at least one custom provider key is saved in the vault."""
+        conn = sqlite3.connect(self.vault.db_path)
+        try:
+            count = conn.execute("SELECT COUNT(*) FROM byok_credentials").fetchone()[0]
+            return count > 0
+        finally:
+            conn.close()

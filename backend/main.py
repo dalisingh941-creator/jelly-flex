@@ -22,6 +22,10 @@ from agents.rea_engine import REACleanRoomEngine
 from apps_registry.stealth_browser import StealthBrowserHumanizer
 from apps_registry.google_drive_sync import GoogleDriveCipherSync
 from apps_registry.omni_social_adapters import OmniSocialRegistry
+from agents.agno_os_system import AgnoOSCoreManager
+from security.invite_auth import InviteCodeAuthManager
+from agents.agent_store import AgentManagerStore
+from agents.multi_agent_coordinator import MultiAgentChatCoordinator
 
 app = FastAPI(
     title="JellyFlex 2.0 Core Gateway",
@@ -58,6 +62,15 @@ rea_engine = REACleanRoomEngine()
 stealth_humanizer = StealthBrowserHumanizer()
 gdrive_sync = GoogleDriveCipherSync(vault=vault)
 social_registry = OmniSocialRegistry()
+agno_os_manager = AgnoOSCoreManager(db_path="backend/data/agno_os.db")
+agno_os_manager.mount_to_fastapi(app)
+invite_auth = InviteCodeAuthManager(db_path=vault.db_path)
+agent_store = AgentManagerStore(db_path=vault.db_path)
+chat_coordinator = MultiAgentChatCoordinator(
+    agent_store=agent_store,
+    orchestrator=orchestrator,
+    viral_simulator=viral_simulator,
+)
 
 # Event bus and permission gates
 event_subscribers: List[asyncio.Queue] = []
@@ -104,11 +117,17 @@ class WaterfallRequest(BaseModel):
 async def health_check():
     return {
         "status": "online" if not panic_locked else "PANIC_LOCKED",
-        "framework": "JellyFlex 2.0 (Agno OS + Google Antigravity SDK + OpenClaw 7-Subsystems)",
+        "framework": "JellyFlex 2.0 (Agno OS Full Framework + Google Antigravity SDK + OpenClaw 7-Subsystems)",
+        "agno_os": agno_os_manager.get_os_status(),
         "doctor": vault.doctor_status,
         "loaded_skills_count": len(orchestrator.skill_registry.list_available_skills()),
         "supported_channels": social_registry.list_supported_channels(),
     }
+
+
+@app.get("/api/v1/agno/os-info")
+async def get_agno_os_info():
+    return agno_os_manager.get_os_status()
 
 
 @app.get("/api/v1/rea/summary")
@@ -259,6 +278,7 @@ async def save_byok_key(sub: BYOKKeySubmission):
     # If Gemini key was updated, sync to orchestrator
     if sub.provider.lower() == "gemini":
         orchestrator.api_key = sub.raw_key
+        agno_os_manager.update_gemini_key(sub.raw_key)
     return result
 
 
@@ -295,6 +315,121 @@ async def uninstall_and_shred():
 @app.get("/api/v1/backup/export")
 async def export_encrypted_backup():
     return gdrive_sync.export_encrypted_backup("manual-backup")
+
+
+class CreateAgentRequest(BaseModel):
+    name: str
+    role: str
+    color: Optional[str] = "#6366f1"
+    avatar_symbol: Optional[str] = "🤖"
+    model: Optional[str] = "gemini-2.0-flash"
+    persona: str
+    instructions: str
+    tools: Optional[List[str]] = None
+    starters: Optional[List[str]] = None
+
+
+class CreateSquadRequest(BaseModel):
+    name: str
+    description: str
+    member_ids: List[str]
+    starters: Optional[List[str]] = None
+
+
+class AgentChatRequest(BaseModel):
+    agent_id: str
+    message: str
+    conversation_id: Optional[str] = None
+
+
+class SquadChatRequest(BaseModel):
+    squad_id: str
+    message: str
+    conversation_id: Optional[str] = None
+
+
+class InviteVerifyRequest(BaseModel):
+    code: str
+
+
+@app.get("/api/v1/auth/invite-status")
+async def get_invite_status():
+    return {
+        "authorized": invite_auth.is_authorized(),
+        "community_code_hint": "Check GitHub README for JELLYFLEX-COMMUNITY-2026",
+        "has_byok_keys": byok_manager.has_configured_keys(),
+    }
+
+
+@app.post("/api/v1/auth/invite-verify")
+async def verify_invite_code(req: InviteVerifyRequest):
+    res = invite_auth.verify_and_authorize(req.code)
+    if not res["success"]:
+        raise HTTPException(status_code=401, detail=res["message"])
+    return res
+
+
+@app.get("/api/v1/agents")
+async def list_all_agents():
+    return {"agents": agent_store.list_agents()}
+
+
+@app.post("/api/v1/agents")
+async def create_new_agent(req: CreateAgentRequest):
+    created = agent_store.create_custom_agent(req.model_dump())
+    return {"status": "created", "agent": created}
+
+
+@app.get("/api/v1/squads")
+async def list_all_squads():
+    return {"squads": agent_store.list_squads()}
+
+
+@app.post("/api/v1/squads")
+async def create_new_squad(req: CreateSquadRequest):
+    created = agent_store.create_custom_squad(req.model_dump())
+    return {"status": "created", "squad": created}
+
+
+@app.get("/api/v1/chat/history/{conversation_id}")
+async def get_chat_history(conversation_id: str):
+    return {"conversation_id": conversation_id, "messages": agent_store.get_conversation_history(conversation_id)}
+
+
+@app.post("/api/v1/chat/agent")
+async def handle_agent_chat(req: AgentChatRequest):
+    if panic_locked:
+        raise HTTPException(status_code=403, detail="System is in PANIC_LOCK mode.")
+    await broadcast_state("THINKING", f"Routing message to {req.agent_id}...")
+    try:
+        reply = await chat_coordinator.chat_one_on_one(
+            agent_id=req.agent_id,
+            user_message=req.message,
+            conversation_id=req.conversation_id,
+        )
+        await broadcast_state("IDLE", f"{reply['sender_name']} delivered response.")
+        return {"status": "success", "message": reply}
+    except Exception as exc:
+        await broadcast_state("ERROR", f"Agent chat error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/api/v1/chat/squad")
+async def handle_squad_chat(req: SquadChatRequest):
+    if panic_locked:
+        raise HTTPException(status_code=403, detail="System is in PANIC_LOCK mode.")
+    await broadcast_state("THINKING", f"Coordinating squad {req.squad_id} collaboration...")
+    try:
+        replies = await chat_coordinator.chat_squad_group(
+            squad_id=req.squad_id,
+            user_message=req.message,
+            conversation_id=req.conversation_id,
+        )
+        await broadcast_state("IDLE", f"Squad {req.squad_id} completed collaboration.")
+        return {"status": "success", "messages": replies}
+    except Exception as exc:
+        await broadcast_state("ERROR", f"Squad chat error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 if __name__ == "__main__":

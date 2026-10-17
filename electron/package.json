@@ -1,0 +1,41 @@
+{
+  "name": "jellyflex-desktop",
+  "version": "2.0.0",
+  "description": "JellyFlex 2.0 — Clean-Room Local-First Conversational AI Agent Suite",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis:x64"
+  },
+  "author": "JellyFlex Community",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.jellyflex.desktop",
+    "productName": "JellyFlex 2.0",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "JellyFlex 2.0",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "artifactName": "JellyFlex-Setup-${version}.${ext}"
+    }
+  }
+}
