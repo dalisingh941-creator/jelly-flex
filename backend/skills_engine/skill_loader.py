@@ -49,21 +49,33 @@ class DynamicSkillRegistry:
             "Multi-Platform Outlier Post Detector, Comment Miner, and 30-Day Viral Trend Researcher.",
             "Identify high-performing outlier formats, extract recurring audience pain points from comments, and synthesize cross-platform angles.",
         ),
+        "hook-writer": (
+            "High-Velocity Hook Engineering & Curiosity Gap Crafting Specialist.",
+            "Craft 3-second pattern interrupts, eliminate passive language, and inject high-tension proof statements.",
+        ),
+        "content-calendar": (
+            "Omni-Channel Scheduling & Cross-Platform Content Cadence Planner.",
+            "Balance evergreen authority pillars with trending reactive topics across multi-platform release cadences.",
+        ),
+        "telegram-discord-suite": (
+            "Community Channel Broadcast, Discord Webhook, and Real-Time Event Specialist.",
+            "Format rich Markdown alerts for Telegram channels and construct structured Discord embed payloads with role tags.",
+        ),
     }
 
     PLATFORM_SKILL_MAP = {
-        "instagram": ["brand-profile", "voice-builder", "instagram-suite"],
-        "youtube": ["brand-profile", "voice-builder", "youtube-suite"],
-        "tiktok": ["brand-profile", "voice-builder", "tiktok-suite"],
-        "x": ["brand-profile", "voice-builder", "x-twitter-suite"],
-        "twitter": ["brand-profile", "voice-builder", "x-twitter-suite"],
-        "linkedin": ["brand-profile", "voice-builder", "linkedin-suite"],
+        "instagram": ["brand-profile", "voice-builder", "instagram-suite", "hook-writer"],
+        "youtube": ["brand-profile", "voice-builder", "youtube-suite", "content-calendar"],
+        "tiktok": ["brand-profile", "voice-builder", "tiktok-suite", "hook-writer"],
+        "x": ["brand-profile", "voice-builder", "x-twitter-suite", "hook-writer"],
+        "twitter": ["brand-profile", "voice-builder", "x-twitter-suite", "hook-writer"],
+        "linkedin": ["brand-profile", "voice-builder", "linkedin-suite", "content-calendar"],
         "threads": ["brand-profile", "voice-builder", "threads-facebook-suite"],
         "facebook": ["brand-profile", "voice-builder", "threads-facebook-suite"],
         "pinterest": ["brand-profile", "voice-builder", "pinterest-reddit-suite"],
         "reddit": ["brand-profile", "voice-builder", "pinterest-reddit-suite", "research-outlier-miner"],
-        "telegram": ["brand-profile", "voice-builder"],
-        "discord": ["brand-profile", "voice-builder"],
+        "telegram": ["brand-profile", "voice-builder", "telegram-discord-suite"],
+        "discord": ["brand-profile", "voice-builder", "telegram-discord-suite"],
     }
 
     def __init__(self, skills_root: str = "skills"):

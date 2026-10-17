@@ -9,7 +9,12 @@ class BaseSocialAdapter:
         return True
 
     async def dispatch(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        raise NotImplementedError
+        return {
+            "channel": self.channel_name,
+            "format": payload.get("format", "standard"),
+            "status": "DISPATCHED_TO_STEALTH_EMULATOR",
+            "channel_type": "omni_social_clean_room",
+        }
 
 
 class InstagramAdapter(BaseSocialAdapter):
@@ -77,6 +82,71 @@ class LinkedInAdapter(BaseSocialAdapter):
         }
 
 
+class ThreadsAdapter(BaseSocialAdapter):
+    def __init__(self):
+        super().__init__("threads")
+
+    async def dispatch(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "channel": "threads",
+            "format": payload.get("format", "conversation"),
+            "status": "DISPATCHED_TO_STEALTH_EMULATOR",
+            "engagement_prompt": True,
+        }
+
+
+class RedditAdapter(BaseSocialAdapter):
+    def __init__(self):
+        super().__init__("reddit")
+
+    async def dispatch(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "channel": "reddit",
+            "format": payload.get("format", "value_post"),
+            "status": "DISPATCHED_TO_STEALTH_EMULATOR",
+            "outlier_mined": True,
+        }
+
+
+class PinterestAdapter(BaseSocialAdapter):
+    def __init__(self):
+        super().__init__("pinterest")
+
+    async def dispatch(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "channel": "pinterest",
+            "format": payload.get("format", "vertical_pin"),
+            "status": "DISPATCHED_TO_STEALTH_EMULATOR",
+            "visual_seo": True,
+        }
+
+
+class TelegramAdapter(BaseSocialAdapter):
+    def __init__(self):
+        super().__init__("telegram")
+
+    async def dispatch(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "channel": "telegram",
+            "format": payload.get("format", "broadcast"),
+            "status": "DISPATCHED_TO_STEALTH_EMULATOR",
+            "markdown_formatted": True,
+        }
+
+
+class DiscordAdapter(BaseSocialAdapter):
+    def __init__(self):
+        super().__init__("discord")
+
+    async def dispatch(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "channel": "discord",
+            "format": payload.get("format", "webhook_embed"),
+            "status": "DISPATCHED_TO_STEALTH_EMULATOR",
+            "embed_ready": True,
+        }
+
+
 class OmniSocialRegistry:
     def __init__(self):
         self._adapters: Dict[str, BaseSocialAdapter] = {
@@ -86,12 +156,17 @@ class OmniSocialRegistry:
             "x": XTwitterAdapter(),
             "twitter": XTwitterAdapter(),
             "linkedin": LinkedInAdapter(),
+            "threads": ThreadsAdapter(),
+            "facebook": ThreadsAdapter(),
+            "reddit": RedditAdapter(),
+            "pinterest": PinterestAdapter(),
+            "telegram": TelegramAdapter(),
+            "discord": DiscordAdapter(),
         }
 
     def get_adapter(self, channel: str) -> BaseSocialAdapter:
         ch = channel.lower().strip()
         if ch not in self._adapters:
-            # Fallback generic adapter
             return BaseSocialAdapter(ch)
         return self._adapters[ch]
 

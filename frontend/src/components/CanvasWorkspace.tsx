@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { MascotMatrix, MascotState } from './MascotMatrix';
+import { ModularAvatarSVG, CustomAvatarConfig, DEFAULT_AVATAR_CONFIG } from './ModularAvatarSVG';
 import { useMascotSSE } from '../hooks/useMascotSSE';
 import {
   PlatformVectorIcon,
@@ -107,9 +108,10 @@ interface TaskLogItem {
 }
 
 export const CanvasWorkspace: React.FC<{
+  avatarConfig?: CustomAvatarConfig;
   onOpenAvatarStudio?: () => void;
   onOpenSecurityModal?: () => void;
-}> = ({ onOpenAvatarStudio, onOpenSecurityModal }) => {
+}> = ({ avatarConfig = DEFAULT_AVATAR_CONFIG, onOpenAvatarStudio, onOpenSecurityModal }) => {
   const { mascotState, statusDetail, pendingApprovalTask, isConnected } = useMascotSSE();
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformConfig>(PLATFORMS[0]);
   const [objective, setObjective] = useState('');
@@ -117,6 +119,7 @@ export const CanvasWorkspace: React.FC<{
   const [waterfallMode, setWaterfallMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [viewCustomRig, setViewCustomRig] = useState(true);
 
   const [activeTaskLog, setActiveTaskLog] = useState<TaskLogItem[]>([
     {
@@ -248,19 +251,19 @@ export const CanvasWorkspace: React.FC<{
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-canvas-dark dark:bg-[#06080e] light:bg-[#f8fafc] text-slate-100 selection:bg-indigo-500/30">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#06080e] text-slate-800 dark:text-slate-100 selection:bg-indigo-500/30 transition-colors duration-300">
       {/* TOP HEADER */}
-      <header className="h-14 border-b border-white/[0.08] px-6 flex items-center justify-between glass-panel sticky top-0 z-30">
+      <header className="h-14 border-b border-slate-200/80 dark:border-white/[0.08] px-6 flex items-center justify-between glass-panel sticky top-0 z-30 transition-colors">
         <div className="flex items-center gap-3">
           <div
             className={`h-2.5 w-2.5 rounded-full ${
-              isConnected ? 'bg-emerald-400 shadow-[0_0_12px_#10b981]' : 'bg-amber-400 animate-pulse'
+              isConnected ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_12px_#10b981]' : 'bg-amber-400 animate-pulse'
             }`}
           />
-          <span className="font-semibold tracking-tight text-sm text-white">
-            JellyFlex <span className="text-indigo-400 font-mono text-xs ml-1">v2.0 CLEAN-ROOM</span>
+          <span className="font-semibold tracking-tight text-sm text-slate-900 dark:text-white">
+            JellyFlex <span className="text-indigo-600 dark:text-indigo-400 font-mono text-xs ml-1 font-semibold">v2.0 CLEAN-ROOM</span>
           </span>
-          <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono bg-white/[0.04] border border-white/[0.08] text-slate-400">
+          <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400">
             AGNO OS + GOOGLE ANTIGRAVITY SDK
           </span>
         </div>
@@ -270,7 +273,7 @@ export const CanvasWorkspace: React.FC<{
           <button
             type="button"
             onClick={toggleTheme}
-            className="btn-spring p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300"
+            className="btn-spring p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 transition-colors"
             title="Toggle Light / Dark Mode"
           >
             {isDarkMode ? <AnimatedSunIcon className="w-4 h-4" /> : <AnimatedMoonIcon className="w-4 h-4" />}
@@ -280,7 +283,7 @@ export const CanvasWorkspace: React.FC<{
           <button
             type="button"
             onClick={onOpenAvatarStudio}
-            className="btn-spring px-3 py-1.5 rounded-xl text-xs font-medium bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-400/30 text-indigo-200 hover:border-indigo-400/60 flex items-center gap-1.5"
+            className="btn-spring px-3 py-1.5 rounded-xl text-xs font-medium bg-indigo-500/10 hover:bg-indigo-500/20 dark:bg-gradient-to-r dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-400/40 text-indigo-700 dark:text-indigo-200 hover:border-indigo-400/70 flex items-center gap-1.5 transition-colors"
           >
             <AnimatedPaletteIcon className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Avatar Studio</span>
@@ -290,7 +293,7 @@ export const CanvasWorkspace: React.FC<{
           <button
             type="button"
             onClick={onOpenSecurityModal}
-            className="btn-spring px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 hover:border-emerald-500/60 flex items-center gap-1.5"
+            className="btn-spring px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 dark:bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-200 hover:border-emerald-500/70 flex items-center gap-1.5 transition-colors"
           >
             <AnimatedShieldIcon active={true} className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">BYOK Vault</span>
@@ -301,14 +304,14 @@ export const CanvasWorkspace: React.FC<{
       {/* 3-PANE WORKSPACE */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-[1600px] w-full mx-auto">
         {/* LEFT RAIL: OMNI-CHANNEL PLATFORM SELECTOR (3 COLS) */}
-        <aside className="lg:col-span-3 border-r border-white/[0.08] p-5 flex flex-col justify-between bg-black/10">
+        <aside className="lg:col-span-3 border-r border-slate-200/80 dark:border-white/[0.08] p-5 flex flex-col justify-between bg-slate-100/50 dark:bg-black/10 transition-colors">
           <div className="space-y-6">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-400">
+                <h2 className="text-[11px] font-mono uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   Omni-Channel Lanes
                 </h2>
-                <span className="text-[10px] font-mono text-emerald-400">FIFO Active</span>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">FIFO Active</span>
               </div>
               <div className="space-y-1.5">
                 {PLATFORMS.map((platform) => {
@@ -320,15 +323,15 @@ export const CanvasWorkspace: React.FC<{
                       onClick={() => setSelectedPlatform(platform)}
                       className={`btn-spring w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-medium transition-all ${
                         active
-                          ? 'bg-indigo-500/15 border border-indigo-500/50 text-white shadow-[0_0_20px_rgba(99,102,241,0.25)]'
-                          : 'hover:bg-white/[0.03] text-slate-400 border border-transparent'
+                          ? 'bg-indigo-500/15 border border-indigo-500/50 text-indigo-900 dark:text-white shadow-[0_0_20px_rgba(99,102,241,0.18)] dark:shadow-[0_0_20px_rgba(99,102,241,0.25)]'
+                          : 'hover:bg-slate-200/60 dark:hover:bg-white/[0.03] text-slate-600 dark:text-slate-400 border border-transparent'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <PlatformVectorIcon platform={platform.id} className="w-4 h-4" />
                         <span>{platform.label}</span>
                       </div>
-                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] text-slate-300">
+                      <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/[0.05] text-slate-700 dark:text-slate-300">
                         {platform.defaultSkills.length} skills
                       </span>
                     </button>
@@ -338,38 +341,38 @@ export const CanvasWorkspace: React.FC<{
             </div>
 
             {/* ACTIVE CHAINED SKILLS */}
-            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2.5">
+            <div className="p-4 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.06] shadow-sm dark:shadow-none space-y-2.5 transition-colors">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 font-semibold">
                   <AnimatedTerminalIcon className="w-3.5 h-3.5" />
                   Chained SKILL.md
                 </span>
-                <span className="text-[10px] font-mono text-emerald-400">Auto-Routed</span>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Auto-Routed</span>
               </div>
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {selectedPlatform.defaultSkills.map((skill) => (
                   <span
                     key={skill}
-                    className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-indigo-500/10 border border-indigo-500/25 text-indigo-200"
+                    className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-indigo-500/10 border border-indigo-500/25 text-indigo-700 dark:text-indigo-200"
                   >
                     {skill}
                   </span>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed pt-1 font-sans">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pt-1 font-sans">
                 {selectedPlatform.formatHint}
               </p>
             </div>
           </div>
 
           {/* TELEMETRY FOOTER */}
-          <div className="p-3.5 rounded-2xl bg-emerald-500/[0.05] border border-emerald-500/20 space-y-1 mt-6">
-            <div className="flex items-center justify-between text-[11px] font-mono">
-              <span className="text-emerald-300">STATE DOCTOR</span>
-              <span className="text-emerald-400">WAL HEALTHY</span>
+          <div className="p-3.5 rounded-2xl bg-emerald-500/[0.08] dark:bg-emerald-500/[0.05] border border-emerald-500/25 space-y-1 mt-6 transition-colors">
+            <div className="flex items-center justify-between text-[11px] font-mono font-medium">
+              <span className="text-emerald-700 dark:text-emerald-300">STATE DOCTOR</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">WAL HEALTHY</span>
             </div>
-            <p className="text-[10px] text-slate-400 font-sans">
-              Routing tasks to <span className="text-slate-200 font-mono">gemini-3.8-flash</span>. Complex audits to <span className="text-slate-200 font-mono">gemini-4-argon</span>.
+            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-sans">
+              Routing tasks to <span className="text-slate-800 dark:text-slate-200 font-mono font-medium">gemini-3.8-flash</span>. Complex audits to <span className="text-slate-800 dark:text-slate-200 font-mono font-medium">gemini-4-argon</span>.
             </p>
           </div>
         </aside>
@@ -379,23 +382,23 @@ export const CanvasWorkspace: React.FC<{
           {/* COMPOSER CARD */}
           <form
             onSubmit={handleDispatch}
-            className="p-5 rounded-3xl glass-panel border border-white/[0.08] shadow-2xl space-y-4"
+            className="p-5 rounded-3xl glass-panel border border-slate-200/80 dark:border-white/[0.08] shadow-md dark:shadow-2xl space-y-4 transition-colors"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-300">Target Lane:</span>
-                <span className="px-2 py-0.5 rounded text-[11px] font-mono uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold">
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Target Lane:</span>
+                <span className="px-2 py-0.5 rounded text-[11px] font-mono uppercase bg-indigo-500/15 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 dark:border-indigo-500/40 font-semibold">
                   {selectedPlatform.label}
                 </span>
               </div>
-              <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={waterfallMode}
                   onChange={(e) => setWaterfallMode(e.target.checked)}
-                  className="rounded border-slate-700 bg-slate-900 text-indigo-500"
+                  className="rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-indigo-600"
                 />
-                <span className="flex items-center gap-1.5 font-mono text-[11px] text-indigo-300">
+                <span className="flex items-center gap-1.5 font-mono text-[11px] text-indigo-600 dark:text-indigo-300 font-semibold">
                   <AnimatedLayersIcon className="w-3.5 h-3.5" />
                   1-to-11 Waterfall
                 </span>
@@ -407,16 +410,16 @@ export const CanvasWorkspace: React.FC<{
               value={objective}
               onChange={(e) => setObjective(e.target.value)}
               placeholder={`Instruct your ${selectedPlatform.label} specialist agent (e.g. "Reverse-engineer top 30-day viral AI hooks and draft 10-slide carousel + Reels retention script")...`}
-              className="w-full rounded-2xl bg-black/40 border border-white/[0.08] p-4 text-xs font-sans text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/70 transition-colors"
+              className="w-full rounded-2xl bg-white dark:bg-black/40 border border-slate-200/80 dark:border-white/[0.08] p-4 text-xs font-sans text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500/70 transition-colors shadow-sm dark:shadow-none"
             />
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={requireApproval}
                   onChange={(e) => setRequireApproval(e.target.checked)}
-                  className="rounded border-slate-700 bg-slate-900 text-amber-500"
+                  className="rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-amber-500"
                 />
                 <span>Human Permission Broker Gate</span>
               </label>
@@ -424,7 +427,7 @@ export const CanvasWorkspace: React.FC<{
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-spring px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] flex items-center gap-2 disabled:opacity-50"
+                className="btn-spring px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.35)] flex items-center gap-2 disabled:opacity-50 transition-all"
               >
                 <AnimatedRocketIcon className="w-3.5 h-3.5" />
                 <span>{isSubmitting ? 'Dispatching to Lane...' : 'Execute Clean-Room Pipeline'}</span>
@@ -435,11 +438,11 @@ export const CanvasWorkspace: React.FC<{
           {/* ACTIVE QUEUE & APPROVAL CARDS */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-mono uppercase tracking-wider text-slate-400">
+              <h3 className="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Active Queue & Permission Broker Cards
               </h3>
               {pendingApprovalTask && (
-                <span className="px-2.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                <span className="px-2.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 animate-pulse font-semibold">
                   Awaiting Approval: {pendingApprovalTask}
                 </span>
               )}
@@ -448,25 +451,25 @@ export const CanvasWorkspace: React.FC<{
             {activeTaskLog.map((item) => (
               <div
                 key={item.id}
-                className="p-5 rounded-2xl glass-panel border border-white/[0.08] hover:border-white/[0.15] transition-all space-y-3"
+                className="p-5 rounded-2xl glass-panel border border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.15] transition-all space-y-3 shadow-sm dark:shadow-none"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 font-medium">
                       {item.channel}
                     </span>
-                    <span className="text-xs font-mono text-slate-400">#{item.id}</span>
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400">#{item.id}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
                       Viral Hook Score: {item.viralScore}/100
                     </span>
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-mono ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium ${
                         item.status === 'AWAITING_APPROVAL'
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                          : 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
                       }`}
                     >
                       {item.status}
@@ -474,15 +477,15 @@ export const CanvasWorkspace: React.FC<{
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-200 leading-relaxed bg-black/30 p-3.5 rounded-xl border border-white/[0.05] font-sans whitespace-pre-wrap">
+                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed bg-slate-100/70 dark:bg-black/30 p-3.5 rounded-xl border border-slate-200/70 dark:border-white/[0.05] font-sans whitespace-pre-wrap">
                   {item.text}
                 </p>
 
                 {item.warnings && item.warnings.length > 0 && (
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 font-mono space-y-1">
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-700 dark:text-amber-300 font-mono space-y-1">
                     {item.warnings.map((w, idx) => (
                       <div key={idx} className="flex items-center gap-1.5">
-                        <AnimatedAlertIcon className="w-3.5 h-3.5 text-amber-400" />
+                        <AnimatedAlertIcon className="w-3.5 h-3.5 text-amber-500" />
                         <span>{w}</span>
                       </div>
                     ))}
@@ -490,8 +493,8 @@ export const CanvasWorkspace: React.FC<{
                 )}
 
                 {item.status === 'AWAITING_APPROVAL' && (
-                  <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
-                    <span className="text-[11px] text-amber-300 font-mono">
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 dark:border-white/[0.06]">
+                    <span className="text-[11px] text-amber-700 dark:text-amber-300 font-mono font-medium">
                       Permission Broker: Authorize stealth browser dispatch?
                     </span>
                     <div className="flex items-center gap-2">
@@ -506,7 +509,7 @@ export const CanvasWorkspace: React.FC<{
                       <button
                         type="button"
                         onClick={() => handleDeny(item.id)}
-                        className="btn-spring px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30"
+                        className="btn-spring px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 transition-colors"
                       >
                         Deny
                       </button>
@@ -519,46 +522,79 @@ export const CanvasWorkspace: React.FC<{
         </main>
 
         {/* RIGHT INSPECTOR: COMPANION AVATAR & SSE TELEMETRY (3 COLS) */}
-        <aside className="lg:col-span-3 border-l border-white/[0.08] p-5 flex flex-col items-center justify-between bg-black/10">
-          <div className="w-full flex flex-col items-center space-y-6">
+        <aside className="lg:col-span-3 border-l border-slate-200/80 dark:border-white/[0.08] p-5 flex flex-col items-center justify-between bg-slate-100/50 dark:bg-black/10 transition-colors">
+          <div className="w-full flex flex-col items-center space-y-5">
             <div className="w-full flex items-center justify-between">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-slate-400">
+              <span className="text-[11px] font-mono uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 Companion Matrix
               </span>
-              <span className="text-[11px] font-mono text-indigo-400">{mascotState}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setViewCustomRig((prev) => !prev)}
+                  className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors"
+                  title="Toggle Avatar Vector Rig / Standard Matrix"
+                >
+                  {viewCustomRig ? 'Vector Rig' : 'System Ring'}
+                </button>
+                <span className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 font-semibold">{mascotState}</span>
+              </div>
             </div>
 
-            <MascotMatrix state={mascotState} size={190} statusDetail={statusDetail} />
+            {/* AVATAR RENDERING */}
+            <div className="flex flex-col items-center justify-center p-3 w-full">
+              {viewCustomRig ? (
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="p-2 rounded-2xl bg-white/40 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/[0.05] shadow-inner dark:shadow-none">
+                    <ModularAvatarSVG
+                      config={avatarConfig}
+                      runtimeState={mascotState}
+                      size={180}
+                    />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs font-semibold text-slate-800 dark:text-white tracking-tight">
+                      {avatarConfig.name}
+                    </div>
+                    <div className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 uppercase">
+                      {avatarConfig.species.replace('-', ' ')} • {avatarConfig.eyeStyle}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <MascotMatrix state={mascotState} size={190} statusDetail={statusDetail} />
+              )}
+            </div>
 
-            <div className="w-full p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2.5">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+            <div className="w-full p-4 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.06] shadow-sm dark:shadow-none space-y-2.5 transition-colors">
+              <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-medium">
                 Stealth Browser Shield
               </div>
-              <div className="text-xs text-slate-200 flex items-center justify-between">
+              <div className="text-xs text-slate-700 dark:text-slate-200 flex items-center justify-between">
                 <span>Bezier Mouse Jitter</span>
-                <span className="font-mono text-emerald-400 text-[10px]">ACTIVE</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">ACTIVE</span>
               </div>
-              <div className="text-xs text-slate-200 flex items-center justify-between">
+              <div className="text-xs text-slate-700 dark:text-slate-200 flex items-center justify-between">
                 <span>Token-Bucket Guard</span>
-                <span className="font-mono text-emerald-400 text-[10px]">ARMED (12/hr)</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold">ARMED (12/hr)</span>
               </div>
-              <div className="text-xs text-slate-200 flex items-center justify-between">
+              <div className="text-xs text-slate-700 dark:text-slate-200 flex items-center justify-between">
                 <span>Google Drive Cipher</span>
-                <span className="font-mono text-indigo-300 text-[10px]">AES-128-CBC</span>
+                <span className="font-mono text-indigo-600 dark:text-indigo-300 text-[10px] font-semibold">AES-128-CBC</span>
               </div>
             </div>
 
-            <div className="w-full p-4 rounded-2xl bg-indigo-500/[0.05] border border-indigo-500/20 space-y-2">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-indigo-300">
+            <div className="w-full p-4 rounded-2xl bg-indigo-500/[0.06] dark:bg-indigo-500/[0.05] border border-indigo-500/20 space-y-2 transition-colors">
+              <div className="text-[11px] font-mono uppercase tracking-wider text-indigo-700 dark:text-indigo-300 font-semibold">
                 REA Clean-Room Pipeline
               </div>
-              <div className="text-[11px] text-slate-400 leading-snug">
-                14 Repositories indexed in Stage 1–4. Clean-room specs generated in <code className="text-slate-200">artifacts/re_specs/</code>.
+              <div className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                14 Repositories indexed in Stage 1–4. Clean-room specs generated in <code className="text-slate-800 dark:text-slate-200 font-mono font-medium">artifacts/re_specs/</code>.
               </div>
             </div>
           </div>
 
-          <div className="w-full pt-6 border-t border-white/[0.06] text-[10px] font-mono text-slate-500 text-center">
+          <div className="w-full pt-6 border-t border-slate-200/80 dark:border-white/[0.06] text-[10px] font-mono text-slate-500 dark:text-slate-400 text-center transition-colors">
             Zero-Knowledge Local Runtime • 127.0.0.1:8000
           </div>
         </aside>

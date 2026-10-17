@@ -40,9 +40,9 @@ def test_dynamic_skill_registry_all_platforms():
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         registry = DynamicSkillRegistry(skills_root=tmpdir)
         skills = registry.list_available_skills()
-        assert len(skills) >= 10
+        assert len(skills) >= 13
 
-        for platform in ["instagram", "youtube", "tiktok", "x", "linkedin", "threads", "reddit"]:
+        for platform in ["instagram", "youtube", "tiktok", "x", "linkedin", "threads", "reddit", "telegram", "discord", "pinterest"]:
             chained = registry.compile_chained_instructions(platform)
             assert len(chained) >= 3
 
@@ -221,3 +221,128 @@ def test_fastapi_endpoints():
     res = client.post("/api/v1/security/panic-unlock")
     assert res.status_code == 200
     assert res.json()["status"] == "UNLOCKED"
+
+    # REA summary endpoint
+    res = client.get("/api/v1/rea/summary")
+    assert res.status_code == 200
+    assert "methodology" in res.json()
+
+    # REA repo analysis endpoint
+    res = client.get("/api/v1/rea/analyze/openclaw")
+    assert res.status_code == 200
+    assert res.json()["status"].upper() == "ANALYZED"
+
+    # Encrypted backup export endpoint
+    res = client.get("/api/v1/backup/export")
+    assert res.status_code == 200
+    assert res.json()["zero_knowledge_verified"] is True
+
+
+@pytest.mark.asyncio
+async def test_permission_broker_approval_lifecycle():
+    from main import app, _run_task_lifecycle, AutomationTask, pending_approvals, vault
+
+    task = AutomationTask(
+        task_id="test-approval-task",
+        target_channel="instagram",
+        objective="Draft clean-room Instagram Reels hook",
+        require_human_approval=True,
+    )
+
+    lifecycle_future = asyncio.create_task(_run_task_lifecycle(task))
+
+    # Wait until task enters pending_approvals
+    for _ in range(50):
+        if "test-approval-task" in pending_approvals:
+            break
+        await asyncio.sleep(0.05)
+
+    assert "test-approval-task" in pending_approvals
+    gate = pending_approvals["test-approval-task"]
+    assert gate.approved is False
+
+    # Simulate user approval
+    gate.approved = True
+    gate.event.set()
+
+    await asyncio.wait_for(lifecycle_future, timeout=5.0)
+    assert "test-approval-task" not in pending_approvals
+
+    # Verify state was saved to encrypted vault
+    decrypted = vault.load_decrypted_event("test-approval-task")
+    assert "test-approval-task" in decrypted
+
+
+@pytest.mark.asyncio
+async def test_permission_broker_denial_unblocks_immediately():
+    from main import _run_task_lifecycle, AutomationTask, pending_approvals, vault
+
+    task = AutomationTask(
+        task_id="test-deny-task",
+        target_channel="tiktok",
+        objective="Draft test TikTok script to deny",
+        require_human_approval=True,
+    )
+
+    lifecycle_future = asyncio.create_task(_run_task_lifecycle(task))
+
+    for _ in range(50):
+        if "test-deny-task" in pending_approvals:
+            break
+        await asyncio.sleep(0.05)
+
+    assert "test-deny-task" in pending_approvals
+    gate = pending_approvals["test-deny-task"]
+
+    # Simulate user denial: set approved=False and signal event
+    gate.approved = False
+    gate.event.set()
+
+    # Must unblock and complete within 1.0 second, NOT hang for 600s!
+    await asyncio.wait_for(lifecycle_future, timeout=2.0)
+    assert "test-deny-task" not in pending_approvals
+
+    # Verify denied task was NOT written to vault as completed publish
+    with pytest.raises(KeyError):
+        vault.load_decrypted_event("test-deny-task")
+
+
+@pytest.mark.asyncio
+async def test_omni_social_adapters_all_channels():
+    from apps_registry.omni_social_adapters import OmniSocialRegistry
+
+    registry = OmniSocialRegistry()
+    supported = registry.list_supported_channels()
+    assert len(supported) >= 10
+
+    for ch in ["instagram", "youtube", "tiktok", "x", "linkedin", "threads", "reddit", "pinterest", "telegram", "discord"]:
+        adapter = registry.get_adapter(ch)
+        payload = {"format": "standard", "content": "Clean-room test"}
+        assert adapter.validate_payload(payload) is True
+        result = await adapter.dispatch(payload)
+        assert result["channel"] == ch
+        assert "DISPATCHED" in result["status"]
+
+
+def test_byok_orchestrator_dynamic_resolution():
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+        db_file = os.path.join(tmpdir, "vault.db")
+        vault = HardwareFernetVault(db_path=db_file)
+        byok = BYOKVaultManager(vault=vault)
+
+        # Initially no key
+        orch = JellyFlexOrchestrator(skills_root=tmpdir, byok_manager=byok)
+        assert orch.get_effective_gemini_key() is None or orch.get_effective_gemini_key() == os.getenv("GEMINI_API_KEY")
+
+        # Save key in vault
+        byok.save_provider_key("gemini", "AIzaSyTestDynamicKey12345", 25.0)
+
+        # Orchestrator should now dynamically resolve the key
+        orch_with_vault = JellyFlexOrchestrator(skills_root=tmpdir, api_key=None, byok_manager=byok)
+        # Clear env var temporarily for test
+        old_env = os.environ.pop("GEMINI_API_KEY", None)
+        try:
+            assert orch_with_vault.get_effective_gemini_key() == "AIzaSyTestDynamicKey12345"
+        finally:
+            if old_env is not None:
+                os.environ["GEMINI_API_KEY"] = old_env

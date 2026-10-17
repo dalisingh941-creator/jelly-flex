@@ -54,15 +54,23 @@ body {
     radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.04) 0%, transparent 45%);
 }
 
-/* Specular Glassmorphic Card Utility */
 .glass-panel {
   background: var(--bg-surface);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border-subtle);
+}
+
+.dark .glass-panel {
   box-shadow: 
-    0 10px 30px -10px rgba(0, 0, 0, 0.4),
+    0 10px 30px -10px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.light .glass-panel {
+  box-shadow: 
+    0 10px 25px -10px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
 }
 
 .glass-panel-interactive {

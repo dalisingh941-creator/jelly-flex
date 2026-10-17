@@ -23,9 +23,25 @@ class JellyFlexOrchestrator:
         "reverse-engineering", "benchmark", "analysis"
     }
 
-    def __init__(self, skills_root: str = "skills", api_key: Optional[str] = None):
+    def __init__(
+        self,
+        skills_root: str = "skills",
+        api_key: Optional[str] = None,
+        byok_manager: Optional[Any] = None,
+    ):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.byok_manager = byok_manager
         self.skill_registry = DynamicSkillRegistry(skills_root=skills_root)
+
+    def get_effective_gemini_key(self) -> Optional[str]:
+        if self.api_key:
+            return self.api_key
+        env_key = os.getenv("GEMINI_API_KEY")
+        if env_key:
+            return env_key
+        if self.byok_manager:
+            return self.byok_manager.get_decrypted_key_internal("gemini")
+        return None
 
     def select_tier(self, objective: str) -> str:
         tokens = set(objective.lower().split())
@@ -40,12 +56,13 @@ class JellyFlexOrchestrator:
             target_channel.lower(), ["brand-profile", "voice-builder"]
         )
 
-        if AGNO_AVAILABLE and self.api_key:
+        effective_key = self.get_effective_gemini_key()
+        if AGNO_AVAILABLE and effective_key:
             model_id = "gemini-4-argon" if tier == "high-thinking" else "gemini-3.8-flash"
             try:
                 agent = Agent(
                     name=f"JellyFlex {target_channel.capitalize()} Specialist",
-                    model=Gemini(id=model_id, api_key=self.api_key),
+                    model=Gemini(id=model_id, api_key=effective_key),
                     tools=[DuckDuckGoTools()],
                     instructions=[
                         f"Target Platform: {target_channel.upper()}.",

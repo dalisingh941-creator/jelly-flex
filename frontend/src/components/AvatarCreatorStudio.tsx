@@ -100,17 +100,17 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
-      <div className="w-full max-w-5xl rounded-3xl glass-panel border border-white/[0.12] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-xl p-4 transition-colors">
+      <div className="w-full max-w-5xl rounded-3xl glass-panel border border-slate-200 dark:border-white/[0.12] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] transition-colors">
         {/* HEADER */}
-        <div className="px-7 py-5 border-b border-white/[0.08] flex items-center justify-between bg-black/20">
+        <div className="px-7 py-5 border-b border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between bg-slate-50 dark:bg-black/20 transition-colors">
           <div className="flex items-center gap-3">
-            <AnimatedPaletteIcon className="w-5 h-5 text-indigo-400" />
+            <AnimatedPaletteIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             <div>
-              <h2 className="text-base font-semibold text-white tracking-tight">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white tracking-tight">
                 Parametric SVG Avatar Creator Studio
               </h2>
-              <p className="text-[11px] font-mono text-slate-400">
+              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                 Vector Rig • 60fps Native Shaders • Standalone Vector & JSON Exporter
               </p>
             </div>
@@ -118,7 +118,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="btn-spring px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs text-slate-300 font-mono"
+              className="btn-spring px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] text-xs text-slate-700 dark:text-slate-300 font-mono border border-slate-200 dark:border-transparent transition-colors"
             >
               Close
             </button>
@@ -135,17 +135,17 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
         {/* BODY */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-y-auto p-7 gap-7">
           {/* LEFT: LIVE PREVIEW & STATE TESTER (5 COLS) */}
-          <div className="md:col-span-5 flex flex-col items-center justify-between p-6 rounded-2xl bg-black/20 border border-white/[0.06] space-y-6">
+          <div className="md:col-span-5 flex flex-col items-center justify-between p-6 rounded-2xl bg-slate-50/70 dark:bg-black/20 border border-slate-200/80 dark:border-white/[0.06] space-y-6 transition-colors">
             <div className="w-full flex items-center justify-between">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Vector Rig Output
               </span>
-              <span className="text-[11px] font-mono text-indigo-300 font-medium">
+              <span className="text-[11px] font-mono text-indigo-600 dark:text-indigo-300 font-semibold">
                 {testState}
               </span>
             </div>
 
-            <div className="flex items-center justify-center p-6 bg-white/[0.02] rounded-3xl border border-white/[0.05] w-full">
+            <div className="flex items-center justify-center p-6 bg-white/70 dark:bg-white/[0.02] rounded-3xl border border-slate-200/70 dark:border-white/[0.05] w-full shadow-inner dark:shadow-none transition-colors">
               <ModularAvatarSVG
                 config={config}
                 runtimeState={testState}
@@ -156,7 +156,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
 
             {/* RUNTIME STATE EMULATOR */}
             <div className="w-full space-y-2">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 block">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 block font-medium">
                 Test Agent State Morphing:
               </span>
               <div className="grid grid-cols-3 gap-1.5">
@@ -168,8 +168,8 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
                       onClick={() => setTestState(st)}
                       className={`btn-spring px-2 py-1.5 rounded-lg text-[10px] font-mono text-center border transition-all ${
                         testState === st
-                          ? 'bg-indigo-500/20 border-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]'
-                          : 'bg-white/[0.03] border-white/[0.06] text-slate-400 hover:border-white/[0.15]'
+                          ? 'bg-indigo-50 dark:bg-indigo-500/20 border-indigo-500 text-indigo-900 dark:text-white shadow-[0_0_15px_rgba(99,102,241,0.25)] font-semibold'
+                          : 'bg-slate-100/70 dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/[0.15]'
                       }`}
                     >
                       {st}
@@ -184,14 +184,14 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
               <button
                 type="button"
                 onClick={handleExportSVG}
-                className="btn-spring py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-mono text-slate-200"
+                className="btn-spring py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/[0.1] text-xs font-mono text-slate-700 dark:text-slate-200 transition-colors"
               >
                 Export .SVG
               </button>
               <button
                 type="button"
                 onClick={handleExportJSON}
-                className="btn-spring py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-mono text-slate-200"
+                className="btn-spring py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/[0.1] text-xs font-mono text-slate-700 dark:text-slate-200 transition-colors"
               >
                 Export Preset
               </button>
@@ -202,20 +202,20 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
           <div className="md:col-span-7 space-y-5">
             {/* AVATAR CODENAME */}
             <div>
-              <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1.5">
+              <label className="text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
                 Avatar Identifier
               </label>
               <input
                 type="text"
                 value={config.name}
                 onChange={(e) => setConfig({ ...config, name: e.target.value })}
-                className="w-full rounded-xl bg-black/40 border border-white/[0.1] px-3.5 py-2 text-xs font-mono text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/[0.1] px-3.5 py-2 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 shadow-sm dark:shadow-none"
               />
             </div>
 
             {/* SPECIES SELECTOR */}
             <div>
-              <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1.5">
+              <label className="text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
                 Base Species Architecture
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -226,12 +226,12 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
                     onClick={() => setConfig({ ...config, species: item.id })}
                     className={`btn-spring p-3 rounded-xl border text-left transition-all ${
                       config.species === item.id
-                        ? 'bg-indigo-500/15 border-indigo-500 text-white'
-                        : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15] text-slate-400'
+                        ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-500 text-indigo-950 dark:text-white shadow-sm dark:shadow-none'
+                        : 'bg-slate-50/70 dark:bg-white/[0.02] border-slate-200/80 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.15] text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     <div className="text-xs font-semibold">{item.label}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">{item.desc}</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{item.desc}</div>
                   </button>
                 ))}
               </div>
@@ -239,7 +239,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
 
             {/* COLOR PALETTES */}
             <div>
-              <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1.5">
+              <label className="text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
                 Chromatic Aura Shaders
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
@@ -254,7 +254,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
                         secondaryColor: pal.secondary,
                       })
                     }
-                    className="btn-spring px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.2] flex items-center gap-2 text-[11px] text-slate-300"
+                    className="btn-spring px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.2] flex items-center gap-2 text-[11px] text-slate-700 dark:text-slate-300"
                   >
                     <span
                       className="w-2.5 h-2.5 rounded-full"
@@ -271,7 +271,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
                     type="color"
                     value={config.primaryColor}
                     onChange={(e) => setConfig({ ...config, primaryColor: e.target.value })}
-                    className="w-full h-8 rounded-lg bg-transparent cursor-pointer border border-white/[0.1]"
+                    className="w-full h-8 rounded-lg bg-transparent cursor-pointer border border-slate-200 dark:border-white/[0.1]"
                   />
                 </div>
                 <div>
@@ -280,7 +280,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
                     type="color"
                     value={config.secondaryColor}
                     onChange={(e) => setConfig({ ...config, secondaryColor: e.target.value })}
-                    className="w-full h-8 rounded-lg bg-transparent cursor-pointer border border-white/[0.1]"
+                    className="w-full h-8 rounded-lg bg-transparent cursor-pointer border border-slate-200 dark:border-white/[0.1]"
                   />
                 </div>
               </div>
@@ -288,7 +288,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
 
             {/* EYE STYLE */}
             <div>
-              <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1.5">
+              <label className="text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
                 Eye Matrix Shaders
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -299,8 +299,8 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
                     onClick={() => setConfig({ ...config, eyeStyle: eye.id })}
                     className={`btn-spring py-2 px-2.5 rounded-xl border text-center text-xs font-mono transition-all ${
                       config.eyeStyle === eye.id
-                        ? 'bg-indigo-500/20 border-indigo-500 text-white'
-                        : 'bg-white/[0.02] border-white/[0.06] text-slate-400 hover:border-white/[0.15]'
+                        ? 'bg-indigo-50 dark:bg-indigo-500/20 border-indigo-500 text-indigo-950 dark:text-white font-semibold'
+                        : 'bg-slate-50/70 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/[0.15]'
                     }`}
                   >
                     {eye.label}
@@ -311,7 +311,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
 
             {/* ACCESSORIES */}
             <div>
-              <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-1.5">
+              <label className="text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
                 Headgear & Accessories
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -322,8 +322,8 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
                     onClick={() => setConfig({ ...config, accessory: acc.id })}
                     className={`btn-spring py-2 px-2.5 rounded-xl border text-center text-xs font-mono transition-all ${
                       config.accessory === acc.id
-                        ? 'bg-indigo-500/20 border-indigo-500 text-white'
-                        : 'bg-white/[0.02] border-white/[0.06] text-slate-400 hover:border-white/[0.15]'
+                        ? 'bg-indigo-50 dark:bg-indigo-500/20 border-indigo-500 text-indigo-950 dark:text-white font-semibold'
+                        : 'bg-slate-50/70 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-white/[0.15]'
                     }`}
                   >
                     {acc.label}
@@ -337,7 +337,7 @@ export const AvatarCreatorStudio: React.FC<AvatarCreatorStudioProps> = ({
               <button
                 type="button"
                 onClick={handleSave}
-                className="btn-spring w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs tracking-wide flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(99,102,241,0.4)]"
+                className="btn-spring w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs tracking-wide flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(99,102,241,0.35)]"
               >
                 <AnimatedCheckIcon className="w-4 h-4" />
                 <span>Save & Set As Companion Avatar</span>

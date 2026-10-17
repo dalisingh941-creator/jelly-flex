@@ -37,12 +37,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class TaskApprovalGate:
+    def __init__(self):
+        self.event = asyncio.Event()
+        self.approved: bool = False
+
+
 # Core subsystems initialization
 vault = HardwareFernetVault()
 gateway_guard = TrustedGatewayGuard()
 lane_queue = OpenClawLaneQueue()
-orchestrator = JellyFlexOrchestrator()
 byok_manager = BYOKVaultManager(vault=vault)
+orchestrator = JellyFlexOrchestrator(byok_manager=byok_manager)
 uninstaller = CleanUninstallerAndShredder()
 viral_simulator = ViralHookAndShadowbanSimulator()
 waterfall_engine = OmniChannelWaterfallEngine(orchestrator=orchestrator)
@@ -55,7 +61,7 @@ social_registry = OmniSocialRegistry()
 
 # Event bus and permission gates
 event_subscribers: List[asyncio.Queue] = []
-pending_approvals: Dict[str, asyncio.Event] = {}
+pending_approvals: Dict[str, TaskApprovalGate] = {}
 panic_locked: bool = False
 
 
@@ -170,16 +176,22 @@ async def _run_task_lifecycle(task: AutomationTask):
         )
 
         if task.require_human_approval:
-            approval_event = asyncio.Event()
-            pending_approvals[task.task_id] = approval_event
+            gate = TaskApprovalGate()
+            pending_approvals[task.task_id] = gate
             await broadcast_state(
                 "AWAITING_APPROVAL",
                 f"Approve {task.target_channel.upper()} action for {task.task_id}?",
                 task.task_id,
                 requires_approval=True,
             )
-            await asyncio.wait_for(approval_event.wait(), timeout=600.0)
-            pending_approvals.pop(task.task_id, None)
+            try:
+                await asyncio.wait_for(gate.event.wait(), timeout=600.0)
+            finally:
+                pending_approvals.pop(task.task_id, None)
+
+            if not gate.approved:
+                await broadcast_state("IDLE", f"Task {task.task_id} was rejected by user or panic lock. Flow terminated.", task.task_id)
+                return
 
         await broadcast_state("SYNCING", "Encrypting state via PBKDF2HMAC Fernet...", task.task_id)
         await vault.save_encrypted_event_async(
@@ -208,7 +220,9 @@ async def execute_automation_flow(task: AutomationTask, background_tasks: Backgr
 async def approve_pending_task(task_id: str):
     if task_id not in pending_approvals:
         raise HTTPException(status_code=404, detail="No pending approval for this task_id.")
-    pending_approvals[task_id].set()
+    gate = pending_approvals[task_id]
+    gate.approved = True
+    gate.event.set()
     return {"status": "approved", "task_id": task_id}
 
 
@@ -216,7 +230,9 @@ async def approve_pending_task(task_id: str):
 async def deny_pending_task(task_id: str):
     if task_id not in pending_approvals:
         raise HTTPException(status_code=404, detail="No pending approval for this task_id.")
-    del pending_approvals[task_id]
+    gate = pending_approvals[task_id]
+    gate.approved = False
+    gate.event.set()
     await broadcast_state("IDLE", f"Task {task_id} rejected by user.", task_id)
     return {"status": "denied", "task_id": task_id}
 
@@ -252,7 +268,10 @@ async def trigger_panic_lock():
     panic_locked = True
     # Drain active gateway tasks
     drained = await gateway_guard.graceful_drain()
-    # Cancel pending approvals
+    # Cancel pending approvals immediately
+    for gate in list(pending_approvals.values()):
+        gate.approved = False
+        gate.event.set()
     pending_approvals.clear()
     await broadcast_state("ERROR", "EMERGENCY PANIC LOCK ENGAGED: All lanes frozen, vault sealed.")
     return {"status": "PANIC_LOCKED", "drained_tasks": drained}

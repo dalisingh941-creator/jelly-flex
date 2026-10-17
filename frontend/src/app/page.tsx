@@ -11,9 +11,26 @@ export default function Home() {
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [avatarConfig, setAvatarConfig] = useState<CustomAvatarConfig>(DEFAULT_AVATAR_CONFIG);
 
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('jellyflex_avatar_config');
+      if (saved) {
+        setAvatarConfig(JSON.parse(saved));
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleSaveAvatar = (cfg: CustomAvatarConfig) => {
+    setAvatarConfig(cfg);
+    try {
+      localStorage.setItem('jellyflex_avatar_config', JSON.stringify(cfg));
+    } catch (e) {}
+  };
+
   return (
     <main className="min-h-screen">
       <CanvasWorkspace
+        avatarConfig={avatarConfig}
         onOpenAvatarStudio={() => setShowAvatarStudio(true)}
         onOpenSecurityModal={() => setShowSecurityModal(true)}
       />
@@ -21,7 +38,7 @@ export default function Home() {
       {showAvatarStudio && (
         <AvatarCreatorStudio
           initialConfig={avatarConfig}
-          onSaveConfig={(cfg) => setAvatarConfig(cfg)}
+          onSaveConfig={handleSaveAvatar}
           onClose={() => setShowAvatarStudio(false)}
         />
       )}

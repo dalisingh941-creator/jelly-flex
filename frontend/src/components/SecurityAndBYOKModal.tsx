@@ -125,17 +125,17 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl p-4">
-      <div className="w-full max-w-4xl rounded-3xl glass-panel border border-white/[0.12] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-xl p-4 transition-colors">
+      <div className="w-full max-w-4xl rounded-3xl glass-panel border border-slate-200 dark:border-white/[0.12] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] transition-colors">
         {/* HEADER */}
-        <div className="px-7 py-5 border-b border-white/[0.08] flex items-center justify-between bg-black/20">
+        <div className="px-7 py-5 border-b border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between bg-slate-50 dark:bg-black/20 transition-colors">
           <div className="flex items-center gap-3">
-            <AnimatedShieldIcon active={true} className="w-5 h-5 text-emerald-400" />
+            <AnimatedShieldIcon active={true} className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
             <div>
-              <h2 className="text-base font-semibold text-white tracking-tight">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white tracking-tight">
                 Zero-Knowledge BYOK Vault & Security Controls
               </h2>
-              <p className="text-[11px] font-mono text-slate-400">
+              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                 Hardware-Locked AES-128-CBC + HMAC-SHA256 • Write-Only Key Masking
               </p>
             </div>
@@ -143,7 +143,7 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
           {onClose && (
             <button
               onClick={onClose}
-              className="btn-spring px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs text-slate-300 font-mono"
+              className="btn-spring px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] text-xs text-slate-700 dark:text-slate-300 font-mono border border-slate-200 dark:border-transparent transition-colors"
             >
               Close
             </button>
@@ -162,11 +162,11 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
           {/* LEFT: WRITE-ONLY BYOK KEY MANAGER (7 COLS) */}
           <div className="md:col-span-7 space-y-5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-mono uppercase tracking-wider text-amber-300 flex items-center gap-2 font-semibold">
+              <span className="text-xs font-mono uppercase tracking-wider text-amber-700 dark:text-amber-300 flex items-center gap-2 font-semibold">
                 <AnimatedKeyVaultIcon className="w-4 h-4" />
                 Bring Your Own API Key (BYOK)
               </span>
-              <span className="text-[11px] font-mono text-emerald-400">Zero Cloud Leakage</span>
+              <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-medium">Zero Cloud Leakage</span>
             </div>
 
             <div className="space-y-2">
@@ -176,22 +176,22 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
                   onClick={() => setSelectedProvider(item.provider)}
                   className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
                     selectedProvider === item.provider
-                      ? 'bg-indigo-500/15 border-indigo-500/60 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                      : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15]'
+                      ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-400 dark:border-indigo-500/60 shadow-[0_0_20px_rgba(99,102,241,0.12)] dark:shadow-[0_0_20px_rgba(99,102,241,0.2)]'
+                      : 'bg-slate-50/70 dark:bg-white/[0.02] border-slate-200/80 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.15]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                    <span className="w-2 h-2 rounded-full bg-indigo-500" />
                     <div>
-                      <div className="text-xs font-medium text-white">{item.label}</div>
-                      <div className="text-[11px] font-mono text-slate-400">{item.masked}</div>
+                      <div className="text-xs font-medium text-slate-900 dark:text-white">{item.label}</div>
+                      <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{item.masked}</div>
                     </div>
                   </div>
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium ${
                       item.configured
-                        ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                        : 'bg-slate-800 text-slate-400'
+                        ? 'bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30'
+                        : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     {item.configured ? 'READY' : 'UNSET'}
@@ -200,10 +200,10 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
               ))}
             </div>
 
-            <form onSubmit={handleSaveKey} className="p-4 rounded-2xl bg-black/30 border border-white/[0.08] space-y-3">
+            <form onSubmit={handleSaveKey} className="p-4 rounded-2xl bg-slate-50 dark:bg-black/30 border border-slate-200/80 dark:border-white/[0.08] space-y-3 transition-colors">
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2">
-                  <label className="text-[11px] font-mono text-slate-400 block mb-1">
+                  <label className="text-[11px] font-mono text-slate-600 dark:text-slate-400 block mb-1">
                     Paste {selectedProvider.toUpperCase()} Key (Write-Only)
                   </label>
                   <input
@@ -211,18 +211,18 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
                     value={apiKeyInput}
                     onChange={(e) => setApiKeyInput(e.target.value)}
                     placeholder="sk-••••••••••••••••••••"
-                    className="w-full rounded-xl bg-black/40 border border-white/[0.1] px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+                    className="w-full rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/[0.1] px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-indigo-500 shadow-sm dark:shadow-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-mono text-slate-400 block mb-1">
+                  <label className="text-[11px] font-mono text-slate-600 dark:text-slate-400 block mb-1">
                     Monthly Cap ($)
                   </label>
                   <input
                     type="number"
                     value={budgetCap}
                     onChange={(e) => setBudgetCap(e.target.value)}
-                    className="w-full rounded-xl bg-black/40 border border-white/[0.1] px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+                    className="w-full rounded-xl bg-white dark:bg-black/40 border border-slate-200 dark:border-white/[0.1] px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-indigo-500 shadow-sm dark:shadow-none"
                   />
                 </div>
               </div>
@@ -230,7 +230,7 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-spring w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.4)] disabled:opacity-50"
+                className="btn-spring w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.35)] disabled:opacity-50 transition-all"
               >
                 <AnimatedRocketIcon className="w-4 h-4" />
                 <span>Encrypt & Lock Key in Hardware Vault</span>
@@ -242,44 +242,44 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
           <div className="md:col-span-5 flex flex-col justify-between space-y-4">
             <div className="space-y-4">
               {/* EMERGENCY PANIC SWITCH */}
-              <div className="p-4 rounded-2xl bg-amber-500/[0.06] border border-amber-500/25 space-y-2.5">
-                <div className="text-xs font-semibold text-amber-300 flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-amber-500/[0.08] dark:bg-amber-500/[0.06] border border-amber-500/30 dark:border-amber-500/25 space-y-2.5 transition-colors">
+                <div className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-2">
                   <AnimatedAlertIcon className="w-4 h-4" />
                   <span>Emergency Panic Lock</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
                   Freezes all active social lanes, terminates stealth browser worker contexts, and seals the SQLite vault.
                 </p>
                 <button
                   type="button"
                   onClick={handlePanicLock}
-                  className="btn-spring w-full py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-semibold font-mono"
+                  className="btn-spring w-full py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 border border-amber-500/40 text-amber-800 dark:text-amber-200 text-xs font-semibold font-mono transition-colors"
                 >
                   Trigger Instant Panic Lock
                 </button>
               </div>
 
               {/* 1-CLICK CLEAN APP UNINSTALLER */}
-              <div className="p-4 rounded-2xl bg-rose-500/[0.06] border border-rose-500/25 space-y-2.5">
-                <div className="text-xs font-semibold text-rose-300 flex items-center gap-2">
+              <div className="p-4 rounded-2xl bg-rose-500/[0.08] dark:bg-rose-500/[0.06] border border-rose-500/30 dark:border-rose-500/25 space-y-2.5 transition-colors">
+                <div className="text-xs font-semibold text-rose-800 dark:text-rose-300 flex items-center gap-2">
                   <AnimatedTrashShredderIcon className="w-4 h-4" />
                   <span>Clean App Uninstaller & Shredder</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
                   Performs a 3-Pass DoD Cryptographic File Shred on your encrypted SQLite databases and environment secrets, purges browser caches, and cleans runtime state.
                 </p>
                 {!confirmUninstall ? (
                   <button
                     type="button"
                     onClick={() => setConfirmUninstall(true)}
-                    className="btn-spring w-full py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center justify-center gap-2 font-mono"
+                    className="btn-spring w-full py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 dark:bg-rose-500/20 dark:hover:bg-rose-500/30 border border-rose-500/40 text-rose-800 dark:text-rose-200 text-xs font-semibold flex items-center justify-center gap-2 font-mono transition-colors"
                   >
                     <AnimatedTrashShredderIcon className="w-4 h-4" />
                     <span>Uninstall & Shred Local State</span>
                   </button>
                 ) : (
                   <div className="space-y-2 pt-1">
-                    <div className="text-[11px] font-mono text-rose-300 text-center">
+                    <div className="text-[11px] font-mono text-rose-700 dark:text-rose-300 text-center font-semibold">
                       Confirm permanent 3-pass cryptographic wipe?
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -293,7 +293,7 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
                       <button
                         type="button"
                         onClick={() => setConfirmUninstall(false)}
-                        className="btn-spring py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs"
+                        className="btn-spring py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs"
                       >
                         Cancel
                       </button>
@@ -303,12 +303,12 @@ export const SecurityAndBYOKModal: React.FC<{ onClose?: () => void }> = ({ onClo
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] text-[11px] font-mono text-slate-400 space-y-1">
-              <div className="text-emerald-400 flex items-center gap-1.5">
+            <div className="p-3.5 rounded-xl bg-slate-100/70 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.06] text-[11px] font-mono text-slate-600 dark:text-slate-400 space-y-1 transition-colors">
+              <div className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-medium">
                 <AnimatedCheckIcon className="w-3.5 h-3.5" />
                 <span>Zero-Knowledge Hardware Vault: ARMED</span>
               </div>
-              <div>CLI Uninstaller: ./uninstall_jellyflex.sh</div>
+              <div>CLI Uninstaller: ./uninstall_jellyflex.sh or .\uninstall_jellyflex.ps1</div>
             </div>
           </div>
         </div>
