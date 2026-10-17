@@ -1,0 +1,29 @@
+{
+  "runtime": {
+    "version": "2.0.0",
+    "name": "JellyFlex 2.0 Core",
+    "host": "127.0.0.1",
+    "port": 8000,
+    "cors_origins": ["http://localhost:3000", "http://127.0.0.1:3000"]
+  },
+  "security": {
+    "vault_db_path": "backend/database/secure_state.db",
+    "kdf_iterations": 480000,
+    "drain_timeout_seconds": 30.0,
+    "require_human_approval_default": true
+  },
+  "lane_queue": {
+    "max_concurrent_lanes": 6
+  },
+  "stealth_browser": {
+    "max_hourly_actions": 12,
+    "base_typing_wpm": 68,
+    "cooldown_wait_seconds": 1800
+  },
+  "orchestration": {
+    "framework": "Agno OS",
+    "fast_model": "gemini-3.8-flash",
+    "deep_reasoning_model": "gemini-4-argon",
+    "antigravity_sdk_enabled": true
+  }
+}

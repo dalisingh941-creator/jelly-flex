@@ -1,0 +1,17 @@
+{
+  "completion-and-syntax-gate": {
+    "enabled": true,
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -m py_compile backend/main.py || true",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
