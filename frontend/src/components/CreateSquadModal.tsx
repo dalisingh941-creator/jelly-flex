@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AnimatedCheckIcon, AnimatedLayersIcon } from './AnimatedIcons';
+import { Layers, Check, X, Users, Bot } from 'lucide-react';
+import { ICON_MAP } from './CreateAgentModal';
 
 interface CreateSquadModalProps {
   isOpen: boolean;
@@ -83,57 +84,58 @@ export const CreateSquadModal: React.FC<CreateSquadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 border border-white/10 shadow-2xl p-6 sm:p-7 text-white space-y-5">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg rounded-2xl bg-[#FAF9F5] dark:bg-[#1D1C1A] border border-[#E8E6DC] dark:border-[#302E2B] shadow-2xl p-6 sm:p-7 text-[#141413] dark:text-[#FAF9F5] space-y-5">
+        <div className="flex items-center justify-between border-b border-[#E8E6DC] dark:border-[#302E2B] pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400 text-lg shadow-md">
-              <AnimatedLayersIcon className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-[#CC785C]/15 border border-[#CC785C]/30 flex items-center justify-center text-[#CC785C] shadow-sm">
+              <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-white">Create Multi-Agent Squad</h3>
-              <p className="text-xs text-slate-400">Assemble specialist agents into a collaborative group chat.</p>
+              <h3 className="font-semibold text-base text-[#141413] dark:text-[#FAF9F5]">Create Agent Squad</h3>
+              <p className="text-xs text-[#5E5D59] dark:text-[#B0AEA5]">Assemble specialist agents into a coordinated group feed.</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+            className="text-[#5E5D59] hover:text-[#141413] dark:hover:text-[#FAF9F5] p-1.5 rounded-lg hover:bg-[#F5F4ED] dark:hover:bg-[#242320] transition-colors cursor-pointer"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">Squad Name</label>
+            <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">Squad Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Growth & Launch Council, Full-Stack Dev Team"
               required
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#141413] border border-[#E8E6DC] dark:border-[#302E2B] text-[#141413] dark:text-[#FAF9F5] placeholder-[#87867F] focus:outline-none focus:border-[#CC785C]"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">Mission / Description</label>
+            <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">Mission / Directive</label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Cross-functional team managing end-to-end campaign lifecycle"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#141413] border border-[#E8E6DC] dark:border-[#302E2B] text-[#141413] dark:text-[#FAF9F5] placeholder-[#87867F] focus:outline-none focus:border-[#CC785C]"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1.5">
+            <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1.5">
               Select Squad Members ({selectedAgentIds.length} chosen)
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
               {availableAgents.map((agent) => {
                 const selected = selectedAgentIds.includes(agent.id);
+                const Icon = ICON_MAP[agent.avatar_symbol] || Bot;
                 return (
                   <button
                     key={agent.id}
@@ -141,39 +143,48 @@ export const CreateSquadModal: React.FC<CreateSquadModalProps> = ({
                     onClick={() => toggleAgent(agent.id)}
                     className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
                       selected
-                        ? 'bg-indigo-500/15 border-indigo-500/50 text-white'
-                        : 'bg-slate-950/60 border-white/5 text-slate-400 hover:border-white/15'
+                        ? 'bg-[#CC785C]/10 border-[#CC785C]/40 text-[#141413] dark:text-[#FAF9F5]'
+                        : 'bg-white dark:bg-[#141413] border-[#E8E6DC] dark:border-[#302E2B] text-[#5E5D59] dark:text-[#87867F] hover:border-[#CC785C]/30'
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-base">{agent.avatar_symbol || '🤖'}</span>
+                      <div
+                        className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border"
+                        style={{
+                          backgroundColor: `${agent.color}15`,
+                          borderColor: `${agent.color}35`,
+                          color: agent.color,
+                        }}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
                       <div>
-                        <div className="font-semibold text-xs text-white">{agent.name}</div>
-                        <div className="text-[10px] text-slate-400">{agent.role}</div>
+                        <div className="font-medium text-xs text-[#141413] dark:text-[#FAF9F5]">{agent.name}</div>
+                        <div className="text-[10px] text-[#5E5D59] dark:text-[#87867F] truncate">{agent.role}</div>
                       </div>
                     </div>
-                    {selected && <AnimatedCheckIcon className="w-3.5 h-3.5 text-indigo-400" />}
+                    {selected && <Check className="w-3.5 h-3.5 text-[#CC785C]" />}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E8E6DC] dark:border-[#302E2B]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+              className="px-4 py-2 rounded-xl bg-[#F5F4ED] dark:bg-[#242320] hover:bg-[#E8E6DC] dark:hover:bg-[#302E2B] text-[#5E5D59] dark:text-[#B0AEA5] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !name.trim() || selectedAgentIds.length === 0}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center gap-1.5 shadow-[0_0_20px_rgba(99,102,241,0.35)] transition-all cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-[#CC785C] hover:bg-[#D97757] text-white font-medium flex items-center gap-1.5 transition-all cursor-pointer shadow-sm disabled:opacity-50"
             >
-              <AnimatedCheckIcon className="w-3.5 h-3.5" />
-              <span>{isSubmitting ? 'Assembling Squad...' : 'Assemble Squad'}</span>
+              <Check className="w-3.5 h-3.5" />
+              <span>{isSubmitting ? 'Assembling...' : 'Assemble Squad'}</span>
             </button>
           </div>
         </form>

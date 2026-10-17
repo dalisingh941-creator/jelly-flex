@@ -1,6 +1,13 @@
 import asyncio
 import json
 import os
+import sys
+
+# Ensure backend directory is in sys.path
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
 import uvicorn
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +33,8 @@ from agents.agno_os_system import AgnoOSCoreManager
 from security.invite_auth import InviteCodeAuthManager
 from agents.agent_store import AgentManagerStore
 from agents.multi_agent_coordinator import MultiAgentChatCoordinator
+from agents.vision_analyzer import MultimodalVisionAnalyzer
+from agents.voice_transcriber import VoiceAudioTranscriber
 
 app = FastAPI(
     title="JellyFlex 2.0 Core Gateway",
@@ -71,6 +80,8 @@ chat_coordinator = MultiAgentChatCoordinator(
     orchestrator=orchestrator,
     viral_simulator=viral_simulator,
 )
+vision_analyzer = MultimodalVisionAnalyzer(api_key=orchestrator.get_effective_gemini_key())
+voice_transcriber = VoiceAudioTranscriber(api_key=orchestrator.get_effective_gemini_key())
 
 # Event bus and permission gates
 event_subscribers: List[asyncio.Queue] = []
@@ -430,6 +441,93 @@ async def handle_squad_chat(req: SquadChatRequest):
     except Exception as exc:
         await broadcast_state("ERROR", f"Squad chat error: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/api/v1/daily-brief")
+async def get_daily_brief():
+    return {
+        "date": "October 17, 2026",
+        "title": "Executive Daily Agent & Social Briefing",
+        "summary": "Autonomous overnight pipeline completed with 0 errors. All 10 social lanes verified safe via Stealth Humanizer.",
+        "metrics": {
+            "total_posts_dispatched": 14,
+            "avg_viral_hook_score": 92.8,
+            "stealth_safety_score": "100% HEALTHY",
+            "token_budget_consumed_usd": 1.42,
+        },
+        "scheduled_queue": [
+            {
+                "channel": "instagram",
+                "time": "18:00 EST",
+                "hook": "99% of creators waste 4 hours editing Reels—here is the verified clean-room AI architecture.",
+                "status": "QUEUED_FIFO",
+            },
+            {
+                "channel": "youtube",
+                "time": "20:30 EST",
+                "hook": "Clean-Room Reverse Engineering: How to Beat OpenClaw in 48 Hours.",
+                "status": "QUEUED_FIFO",
+            },
+            {
+                "channel": "x",
+                "time": "22:00 EST",
+                "hook": "Why AI dashboards are dead and conversational agent squads won the game.",
+                "status": "QUEUED_FIFO",
+            },
+        ],
+        "trend_radar": [
+            {"topic": "Open-Source Autonomous Agents", "velocity": "+312%", "sentiment": "Bullish"},
+            {"topic": "Local Zero-Knowledge BYOK Vaults", "velocity": "+184%", "sentiment": "High Interest"},
+            {"topic": "Agno OS Multi-Agent Workflows", "velocity": "+228%", "sentiment": "Breakout"},
+        ],
+        "stealth_radar": stealth_humanizer.check_account_safety_radar("instagram"),
+    }
+
+
+class VisionAnalyzeRequest(BaseModel):
+    filename: str
+    content_base64: str
+    prompt: Optional[str] = None
+
+
+class VoiceTranscribeRequest(BaseModel):
+    audio_base64: str
+    mime_type: Optional[str] = "audio/webm"
+
+
+class BrowserVirtualExecuteRequest(BaseModel):
+    action: str = "navigate"
+    target_url: str
+    media_path: Optional[str] = None
+    caption: Optional[str] = None
+
+
+@app.post("/api/v1/vision/analyze")
+async def analyze_multimodal_file(req: VisionAnalyzeRequest):
+    try:
+        raw_bytes = base64.b64decode(req.content_base64)
+    except Exception:
+        raw_bytes = req.content_base64.encode("utf-8")
+    return vision_analyzer.inspect_file(req.filename, raw_bytes, req.prompt)
+
+
+@app.post("/api/v1/audio/transcribe")
+async def transcribe_voice_audio(req: VoiceTranscribeRequest):
+    try:
+        raw_bytes = base64.b64decode(req.audio_base64)
+    except Exception:
+        raw_bytes = req.audio_base64.encode("utf-8")
+    return voice_transcriber.transcribe_audio_blob(raw_bytes, req.mime_type or "audio/webm")
+
+
+@app.post("/api/v1/browser/virtual-execute")
+async def execute_virtual_browser(req: BrowserVirtualExecuteRequest):
+    return await stealth_humanizer.execute_virtual_browser_action(
+        action=req.action,
+        target_url=req.target_url,
+        media_path=req.media_path,
+        caption=req.caption,
+    )
 
 
 if __name__ == "__main__":

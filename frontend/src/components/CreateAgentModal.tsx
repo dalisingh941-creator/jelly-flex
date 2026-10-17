@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AnimatedCheckIcon, AnimatedPaletteIcon } from './AnimatedIcons';
+import {
+  X,
+  Check,
+  Bot,
+  Search,
+  Sparkles,
+  Zap,
+  Code,
+  Compass,
+  Cpu,
+  Terminal,
+  Layers,
+  Shield,
+} from 'lucide-react';
 
 interface CreateAgentModalProps {
   isOpen: boolean;
@@ -10,27 +23,45 @@ interface CreateAgentModalProps {
 }
 
 const COLOR_OPTIONS = [
-  { label: 'Cyan', value: '#06b6d4', class: 'bg-cyan-500' },
-  { label: 'Pink', value: '#ec4899', class: 'bg-pink-500' },
-  { label: 'Amber', value: '#f59e0b', class: 'bg-amber-500' },
-  { label: 'Indigo', value: '#6366f1', class: 'bg-indigo-500' },
-  { label: 'Emerald', value: '#10b981', class: 'bg-emerald-500' },
-  { label: 'Rose', value: '#f43f5e', class: 'bg-rose-500' },
+  { label: 'Terracotta', value: '#CC785C', class: 'bg-[#CC785C]' },
+  { label: 'Olive', value: '#788C5D', class: 'bg-[#788C5D]' },
+  { label: 'Slate', value: '#6A9BCC', class: 'bg-[#6A9BCC]' },
+  { label: 'Amber', value: '#D97757', class: 'bg-[#D97757]' },
+  { label: 'Charcoal', value: '#5E5D59', class: 'bg-[#5E5D59]' },
 ];
 
-const AVATAR_SYMBOLS = ['🤖', '🔍', '✨', '⚡', '💻', '🎵', '🎯', '🧠', '🚀', '🔮'];
+export const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
+  bot: Bot,
+  search: Search,
+  sparkles: Sparkles,
+  zap: Zap,
+  code: Code,
+  compass: Compass,
+  cpu: Cpu,
+  terminal: Terminal,
+  layers: Layers,
+  shield: Shield,
+};
 
-export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onClose, onAgentCreated }) => {
+const GLYPH_KEYS = ['bot', 'search', 'sparkles', 'zap', 'code', 'compass', 'cpu', 'terminal', 'layers', 'shield'];
+
+export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({
+  isOpen,
+  onClose,
+  onAgentCreated,
+}) => {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [persona, setPersona] = useState('');
   const [instructions, setInstructions] = useState('');
   const [selectedColor, setSelectedColor] = useState(COLOR_OPTIONS[0].value);
-  const [selectedSymbol, setSelectedSymbol] = useState(AVATAR_SYMBOLS[0]);
+  const [selectedGlyph, setSelectedGlyph] = useState(GLYPH_KEYS[0]);
   const [model, setModel] = useState('gemini-2.0-flash');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
+
+  const SelectedIcon = ICON_MAP[selectedGlyph] || Bot;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,10 +73,11 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
         name: name.trim(),
         role: role.trim(),
         color: selectedColor,
-        avatar_symbol: selectedSymbol,
+        avatar_symbol: selectedGlyph,
         model,
         persona: persona.trim() || `${name} is an autonomous specialist agent.`,
-        instructions: instructions.trim() || 'Provide clear, authoritative, and actionable assistance.',
+        instructions:
+          instructions.trim() || 'Provide clear, authoritative, and actionable assistance.',
         tools: ['Web Search', 'Dynamic Reasoning', 'Isolated Memory'],
         starters: [
           `How can ${name} assist with your objectives today?`,
@@ -64,11 +96,10 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
         onAgentCreated(data.agent);
         onClose();
       } else {
-        // Fallback local creation
         const localAgent = {
           ...payload,
           id: `agent-local-${Date.now()}`,
-          badge_bg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
+          badge_bg: 'bg-[#CC785C]/10 text-[#CC785C] border-[#CC785C]/30',
           is_custom: true,
         };
         onAgentCreated(localAgent);
@@ -79,14 +110,14 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
         name,
         role,
         color: selectedColor,
-        avatar_symbol: selectedSymbol,
+        avatar_symbol: selectedGlyph,
         model,
         persona: persona || `${name} is an autonomous specialist agent.`,
         instructions,
         tools: ['Web Search'],
         starters: [`How can ${name} help?`],
         id: `agent-local-${Date.now()}`,
-        badge_bg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
+        badge_bg: 'bg-[#CC785C]/10 text-[#CC785C] border-[#CC785C]/30',
         is_custom: true,
       };
       onAgentCreated(localAgent);
@@ -97,26 +128,30 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg rounded-3xl bg-slate-900 border border-white/10 shadow-2xl p-6 sm:p-7 text-white space-y-5 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg rounded-2xl bg-[#FAF9F5] dark:bg-[#1D1C1A] border border-[#E8E6DC] dark:border-[#302E2B] shadow-2xl p-6 sm:p-7 text-[#141413] dark:text-[#FAF9F5] space-y-5 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-[#E8E6DC] dark:border-[#302E2B] pb-4">
           <div className="flex items-center gap-2.5">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-lg border border-white/20 shadow-md"
-              style={{ backgroundColor: `${selectedColor}25`, borderColor: selectedColor }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm"
+              style={{
+                backgroundColor: `${selectedColor}15`,
+                borderColor: `${selectedColor}40`,
+                color: selectedColor,
+              }}
             >
-              {selectedSymbol}
+              <SelectedIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-white">Create Custom Agent</h3>
-              <p className="text-xs text-slate-400">Configure distinct persona, instructions, and isolated memory.</p>
+              <h3 className="font-semibold text-base text-[#141413] dark:text-[#FAF9F5]">Create Specialist Agent</h3>
+              <p className="text-xs text-[#5E5D59] dark:text-[#B0AEA5]">Configure isolated persona, directives, and tool suite.</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+            className="text-[#5E5D59] hover:text-[#141413] dark:hover:text-[#FAF9F5] p-1.5 rounded-lg hover:bg-[#F5F4ED] dark:hover:bg-[#242320] transition-colors cursor-pointer"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -124,33 +159,33 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
           {/* Name & Role */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">Agent Name</label>
+              <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">Agent Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Nova, Echo, Vector"
+                placeholder="e.g. Nova, Cipher, Vector"
                 required
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#141413] border border-[#E8E6DC] dark:border-[#302E2B] text-[#141413] dark:text-[#FAF9F5] placeholder-[#87867F] focus:outline-none focus:border-[#CC785C]"
               />
             </div>
             <div>
-              <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">Specialist Role</label>
+              <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">Specialist Role</label>
               <input
                 type="text"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                placeholder="e.g. Sound Director, Splicer"
+                placeholder="e.g. Trend Analyst, Hook Writer"
                 required
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#141413] border border-[#E8E6DC] dark:border-[#302E2B] text-[#141413] dark:text-[#FAF9F5] placeholder-[#87867F] focus:outline-none focus:border-[#CC785C]"
               />
             </div>
           </div>
 
-          {/* Color & Symbol */}
+          {/* Color & Icon */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">Color Theme</label>
+              <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">Accent Theme</label>
               <div className="flex items-center gap-2 pt-1">
                 {COLOR_OPTIONS.map((c) => (
                   <button
@@ -158,41 +193,47 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
                     type="button"
                     onClick={() => setSelectedColor(c.value)}
                     className={`w-6 h-6 rounded-full ${c.class} transition-transform ${
-                      selectedColor === c.value ? 'scale-125 ring-2 ring-white shadow-md' : 'opacity-70 hover:opacity-100'
+                      selectedColor === c.value
+                        ? 'scale-125 ring-2 ring-[#CC785C] shadow-sm'
+                        : 'opacity-70 hover:opacity-100'
                     }`}
                   />
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">Avatar Glyph</label>
+              <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">Agent Glyph</label>
               <div className="flex items-center gap-1.5 flex-wrap">
-                {AVATAR_SYMBOLS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSelectedSymbol(s)}
-                    className={`w-7 h-7 rounded-lg text-sm flex items-center justify-center transition-all ${
-                      selectedSymbol === s ? 'bg-white/20 border border-white/40 scale-110' : 'hover:bg-white/5 text-slate-400'
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {GLYPH_KEYS.map((k) => {
+                  const Icon = ICON_MAP[k] || Bot;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setSelectedGlyph(k)}
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                        selectedGlyph === k
+                          ? 'bg-[#CC785C]/15 border border-[#CC785C]/40 text-[#CC785C]'
+                          : 'hover:bg-[#F5F4ED] dark:hover:bg-[#242320] text-[#5E5D59] dark:text-[#87867F]'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* Model Selection */}
           <div>
-            <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">Execution Model</label>
+            <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">Execution Model</label>
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white focus:outline-none focus:border-indigo-500 font-mono text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#141413] border border-[#E8E6DC] dark:border-[#302E2B] text-[#141413] dark:text-[#FAF9F5] focus:outline-none focus:border-[#CC785C] font-mono text-xs"
             >
               <option value="gemini-2.0-flash">Google Gemini 2.0 Flash (Fast Reasoning)</option>
-              <option value="gemini-4-argon">Google Gemini 4 Argon (Deep Architecture Tier)</option>
               <option value="claude-3-5-sonnet">Anthropic Claude 3.5 Sonnet (Via BYOK)</option>
               <option value="gpt-4o">OpenAI GPT-4o (Via BYOK)</option>
               <option value="ollama-local">Local Ollama Offline (100% Free)</option>
@@ -201,43 +242,43 @@ export const CreateAgentModal: React.FC<CreateAgentModalProps> = ({ isOpen, onCl
 
           {/* Persona */}
           <div>
-            <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">Persona & Bio</label>
+            <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">Persona & Temperament</label>
             <textarea
               rows={2}
               value={persona}
               onChange={(e) => setPersona(e.target.value)}
-              placeholder="Describe the agent's voice, background, and intellectual temperament..."
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              placeholder="Describe the agent's demeanor, tone, and strategic background..."
+              className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#141413] border border-[#E8E6DC] dark:border-[#302E2B] text-[#141413] dark:text-[#FAF9F5] placeholder-[#87867F] focus:outline-none focus:border-[#CC785C]"
             />
           </div>
 
           {/* System Instructions */}
           <div>
-            <label className="text-[11px] font-mono uppercase text-slate-300 block mb-1">System Instructions</label>
+            <label className="text-[11px] font-mono uppercase text-[#5E5D59] dark:text-[#87867F] block mb-1">System Directives</label>
             <textarea
               rows={3}
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              placeholder="Specific directives, output constraints, formatting rules, and guidelines..."
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono text-xs"
+              placeholder="Specific directives, output constraints, formatting rules..."
+              className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#141413] border border-[#E8E6DC] dark:border-[#302E2B] text-[#141413] dark:text-[#FAF9F5] placeholder-[#87867F] focus:outline-none focus:border-[#CC785C] font-mono text-xs"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E8E6DC] dark:border-[#302E2B]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 transition-colors"
+              className="px-4 py-2 rounded-xl bg-[#F5F4ED] dark:bg-[#242320] hover:bg-[#E8E6DC] dark:hover:bg-[#302E2B] text-[#5E5D59] dark:text-[#B0AEA5] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !name.trim()}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center gap-1.5 shadow-[0_0_20px_rgba(99,102,241,0.35)] transition-all cursor-pointer"
+              className="px-5 py-2 rounded-xl bg-[#CC785C] hover:bg-[#D97757] text-white font-medium flex items-center gap-1.5 transition-all cursor-pointer shadow-sm disabled:opacity-50"
             >
-              <AnimatedCheckIcon className="w-3.5 h-3.5" />
-              <span>{isSubmitting ? 'Creating Agent...' : 'Deploy Agent'}</span>
+              <Check className="w-3.5 h-3.5" />
+              <span>{isSubmitting ? 'Creating...' : 'Deploy Agent'}</span>
             </button>
           </div>
         </form>

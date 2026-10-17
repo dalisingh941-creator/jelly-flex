@@ -1,136 +1,120 @@
-# JellyFlex 2.0 — Autonomous Omni-Channel Social & AI Agent Suite
+# JellyFlex 2.0 — Conversational Multi-Agent AI Suite & Social Engine
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Framework](https://img.shields.io/badge/framework-Agno%20OS%20%2B%20FastAPI-indigo)](https://agno.com)
+[![Framework](https://img.shields.io/badge/framework-Agno%20OS%203.1%20%2B%20FastAPI-indigo)](https://agno.com)
 [![SDK](https://img.shields.io/badge/SDK-Google%20Antigravity%202.0-purple)](https://antigravity.google)
-[![Frontend](https://img.shields.io/badge/frontend-Next.js%2015%20%2B%20Tailwind-black)](https://nextjs.org)
-[![Clean-Room Engine](https://img.shields.io/badge/engine-REA%205--Stage%20Clean--Room-emerald)](https://github.com/morluto/rea)
+[![Desktop](https://img.shields.io/badge/desktop-Electron%20%2B%20NSIS%20Installer-blue)](electron/)
+[![Architecture](https://img.shields.io/badge/architecture-Conversational%20Squads%20%2B%201--on--1-emerald)](https://github.com/morluto/rea)
 
-> **JellyFlex 2.0** is an open-source, local-first, zero-knowledge omni-channel social media and personal AI agent suite. Powered by the **Agno OS framework**, the **Google Antigravity SDK**, clean-room synthesized **7 OpenClaw 2.0 subsystems**, and an interactive **Next.js 15 companion workspace**.
+<p align="center">
+  <img src="frontend/public/brand-mascot.png" alt="JellyFlex 2.0 Official Mascot" width="180" style="border-radius: 24px; box-shadow: 0 0 35px rgba(99,102,241,0.4);" />
+</p>
+
+> **JellyFlex 2.0** is an open-source, local-first, zero-knowledge conversational AI agent suite and social media automation engine. Completely free from cluttered dashboards, JellyFlex gives creators and developers an ultra-clean **conversational workspace** reverse-engineered from the best elements of **CUE by Manus**, **OpenClaw 2.0**, and **Claude Desktop**.
+>
+> Features **isolated 1-on-1 specialist agent chats** and **WhatsApp/Slack-style Multi-Agent Squad Group Chats** powered by **Agno OS 3.1** and the **Google Antigravity SDK**.
 
 ---
 
-## 1. System Architecture
+## 🔑 Single-Time GitHub Community Access Code
+
+JellyFlex 2.0 is an invite-only open-source release with zero developer telemetry:
 
 ```text
-                       +------------------------------------------------+
-                       |         JellyFlex Companion Workspace          |
-                       |     (Next.js 15 + Tailwind CSS + Dark/Light)    |
-                       | [MascotMatrix + Avatar Studio + Approval Cards]|
-                       +-----------------------+------------------+-----+
-                        HTTP Commands          |                  | Single Canonical SSE Stream
-                       (POST /api/v1/execute)  |                  | (GET /api/v1/stream)
-                                               v                  |
-       +----------------------------------------------------------+-----------------+
-       |            FastAPI Trusted Gateway & Harness (127.0.0.1:8000)             |
-       |  +---------------------+  +--------------------+  +---------------------+  |
-       |  | Semantic Cost Router|  | Permission Broker  |  | OpenClaw State      |  |
-       |  | (Flash vs. Argon)   |  | (Inline Allow/Deny)|  | Doctor & SSE Bus    |  |
-       |  +----------+----------+  +---------+----------+  +----------+----------+  |
-       +-------------+-----------------------+------------------------+-------------+
-                     |                       |                        |
-                     v                       v                        v
-       +--------------------------+ +----------------------+ +----------------------+
-       |  Agno Core & Lane Queue  | | Inbuilt Skills Engine| | Zero-Knowledge Vault |
-       |  - FIFO Outbox Lanes     | | - 106+ SKILL.md Hub  | | - PBKDF2 + Fernet DB |
-       |  - Cron Lease Manager    | | - IG / YT / TikTok   | | - Encrypted G-Drive  |
-       |  - Stealth Browser Pool  | | - X / LI / Reddit    | | - Rate-Limit Buckets |
-       +--------------------------+ +----------------------+ +----------------------+
+Community Access Code: JELLYFLEX-COMMUNITY-2026
 ```
 
----
-
-## 2. Clean-Room Reverse-Engineering & Parity Matrix
-
-All capabilities in JellyFlex 2.0 were synthesized autonomously through the **REA (Reverse Engineer Anything)** 5-stage clean-room methodology (`Pick a feature` -> `Route by build` -> `Summary first` -> `Seen/Inferred/Unknown evidence tagging` -> `Rebuild & test`), harvesting specifications from:
-- **morluto/rea**: 5-stage MCP and static/dynamic AST reverse-engineering pipeline.
-- **openclaw/openclaw & openclaw/clawhub**: 7 core subsystems extracted into clean-room Python.
-- **milind-soni/OpenMausBot**: Two-process HTTP command + single SSE stream and reactive companion state machine.
-- **gitroomhq/postiz-app & trypostit/trypost**: Rate limiters, 1-to-11 content repurposing waterfall.
-- **14 Inbuilt Social Repositories**: 106+ social skills spanning Instagram, YouTube, TikTok, X, LinkedIn, Threads, Reddit, Pinterest, Telegram, and Discord.
-
-| Feature / Subsystem | OpenClaw 2.0 / Postiz / Cue | JellyFlex 2.0 Clean-Room Architecture |
-|---|---|---|
-| **Subsystem 1: Sandbox Isolation** | Node.js child processes (`gateway-prewarm.mjs`) | `TrustedGatewayGuard` with 30s graceful shutdown drain budget |
-| **Subsystem 2: Concurrency & Order** | Memory queues subject to crash losses | `OpenClawLaneQueue` with channel locks, global semaphore & SQLite FIFO recovery |
-| **Subsystem 3: Local Storage & Healing** | Raw SQLite with main-thread lag | `HardwareFernetVault` off-main-thread with automatic `doctor_repair()` |
-| **Subsystem 4: Anti-Ban Stealth** | Basic headless browser | `StealthBrowserHumanizer` with bezier curves & biological typing jitter |
-| **Subsystem 5: Skill Engine** | Proprietary ClawHub manifests | `DynamicSkillRegistry` auto-chaining Foundation + Platform `SKILL.md` playbooks |
-| **Subsystem 6: Event Triggers** | Cron loops with duplicate risk | `CronLeaseManager` with lease TTL tokens preventing collision |
-| **Subsystem 7: Omni-Channel Bridges** | Monolithic Node bridges | `OmniSocialRegistry` supporting 10+ social platforms & encrypted Google Drive sync |
-| **UI Design System** | Generic or closed-source | Next.js 15 glassmorphic obsidian/frosted interface, dark/light modes, animated SVG icons, zero emojis |
-| **Companion Avatar** | Static image or single mascot | 6-state `MascotMatrix` + 5-species Parametric `AvatarCreatorStudio` with SVG/JSON export |
-| **BYOK Security & Privacy** | Plaintext config files | Write-only key masking, hardware-bound AES-128-CBC encryption, 1-click panic lock |
-| **App Uninstaller** | Leaves zombie processes and databases | 1-Click DoD 3-pass cryptographic file shredder & clean uninstaller script |
+- **One-Time Only**: Enter this code on first launch. It is permanently verified in your local SQLite database (`backend/database/secure_state.db`) and local storage.
+- **Never Prompts Again**: Subsequent launches automatically unlock straight into your conversation feed.
 
 ---
 
-## 3. Inbuilt Social Media Agent Skills (`skills/`)
+## 🔐 Strict Bring-Your-Own-Key (BYOK) Sovereignty
 
-Every platform skill chains through **Foundation** (`brand-profile` -> `voice-builder`) before applying platform-specific rules:
-
-- **Instagram Suite (`skills/instagram-suite/`)**: 0-3s hook velocity, 5s retention beats, 10-slide carousel architecture, searchable caption keyword SEO.
-- **YouTube Suite (`skills/youtube-suite/`)**: Long-form retention curves, 9:16 Shorts scripts, high-CTR title variations, thumbnail design briefs, timestamped chapters.
-- **TikTok Suite (`skills/tiktok-suite/`)**: Pattern-interrupt openers, TikTok Photo Mode carousels, audio/trend synchronizers.
-- **X / Twitter Suite (`skills/x-twitter-suite/`)**: 280-char high-signal single posts, high-tension thread architecture, Grok-style timeline reply flywheel.
-- **LinkedIn Suite (`skills/linkedin-suite/`)**: "See more" fold hook optimization (lines 1-2), B2B document carousel slide briefs, thought leadership essays.
-- **Meta Threads & Facebook (`skills/threads-facebook-suite/`)**: Conversational debate starters, Facebook Group community value prompts.
-- **Pinterest & Reddit (`skills/pinterest-reddit-suite/`)**: 2:3 vertical Pin visual SEO briefs; Reddit value-first answers strictly respecting subreddit rules.
-- **Research & Outlier Miner (`skills/research-outlier-miner/`)**: Outlier post detector (3x–10x median baseline), audience comment objection miner, 30-day viral trend synthesis.
-- **Telegram & Discord (`skills/telegram-discord-suite/`)**: Broadcast announcements with formatted markdown, community webhook embeds.
+JellyFlex **never bundles developer API keys**. You maintain 100% cryptographic sovereignty over your models and tokens:
+- **Supported Providers**: Google Gemini (Flash & Argon), OpenAI (GPT-4o), Anthropic Claude (Sonnet 3.5), xAI Grok, Instagram Graph API, and Local Ollama (100% free offline).
+- **Zero-Knowledge Encryption**: Keys are encrypted at rest with hardware-bound `PBKDF2HMAC` (480,000 iterations) + `Fernet` AES-128-CBC. Keys are never exposed in plaintext over HTTP.
 
 ---
 
-## 4. Quickstart
+## 🤖 1-on-1 Specialist Agents & Multi-Agent Squads
 
-### Prerequisites
-- Python 3.12+ (or [uv](https://github.com/astral-sh/uv))
-- Node.js 20+ and npm
+Unlike bloated dashboards, JellyFlex is 100% conversational:
 
-### 1. Clone & Set Up Backend
+### 1. Distinct 1-on-1 Specialist Agents
+Every agent has their own distinct author persona, system instructions, color theme, and **isolated SQLite memory**:
+- **Scout (`agent-scout`)** — *Research & Outlier Scout* (Cyan): Mines 30-day viral trend outliers, audience sentiment, and competitor teardowns.
+- **Aura (`agent-aura`)** — *Instagram & Visual Strategist* (Pink): Retention curves, 0-3s pattern interrupts, 10-slide carousel storyboarding, and IG SEO.
+- **Volt (`agent-volt`)** — *Viral Hook & Copy Chief* (Amber): Sharp, high-CTR hooks, irresistible curiosity gaps, and shadowban avoidance.
+- **Cipher (`agent-cipher`)** — *Code & Automation Engineer* (Indigo): Clean-room engineering, local API bridges, and autonomous scripts.
+- **+ Create Custom Agent**: Configure custom name, role, persona, model, system instructions, avatar glyph, and color theme.
+
+### 2. Multi-Agent Squads (WhatsApp / Slack Style)
+Assemble multiple agents into a collaborative group chat:
+- **Omni-Channel Launch Squad**: Scout, Volt, Aura, and Cipher collaborate in a unified real-time conversation stream.
+- **Viral Research & Copy Team**: Fast turnaround trend analysis and copy synthesis.
+- **Dynamic Handoffs**: When you prompt the squad, agents debate and build upon each other (Scout gathers data -> Volt writes the hooks -> Aura designs the carousel -> Cipher generates the automation spec).
+
+---
+
+## ⚡ 1-Click Autonomous Desktop Setup
+
+JellyFlex includes an Electron desktop wrapper with a native Windows NSIS installer setup:
+
+### Windows 1-Click Launch:
+Simply double-click:
+```bat
+setup_installer.bat
+```
+Or run in PowerShell:
+```powershell
+.\setup_installer.ps1 -Launch
+```
+
+### Build Windows NSIS `.exe` Installer:
+```powershell
+.\setup_installer.ps1 -BuildInstaller
+```
+Produces `JellyFlex-Setup-2.0.0.exe` in `electron/dist/` with desktop shortcut, start menu entry, and uninstaller.
+
+---
+
+## 🛠️ Manual Development Setup
+
+### 1. Run Automated Test Suite
 ```bash
-git clone https://github.com/your-username/jelly-flex-core.git
-cd jelly-flex-core
-
-# Using uv (fastest):
-uv venv
-uv pip install -r backend/requirements.txt
-
-# Run automated clean-room verification suite:
-uv run pytest
+.venv\Scripts\pytest
+# 19 passing tests covering clean-room subsystems, invite auth, and multi-agent squad chat
 ```
 
-### 2. Start Backend FastAPI Server
+### 2. Start Backend FastAPI Gateway
 ```bash
-uv run python backend/main.py
-# Server runs at http://127.0.0.1:8000
-# API Docs available at http://127.0.0.1:8000/docs
+.venv\Scripts\python backend\main.py
+# Running at http://127.0.0.1:8000
 ```
 
-### 3. Start Frontend Companion Workspace
+### 3. Start Frontend Companion UI
 ```bash
 cd frontend
-npm install
 npm run dev
-# Open http://localhost:3000 in your browser
-```
-
-### 4. Or Run With Docker Compose
-```bash
-docker-compose up --build
+# Running at http://localhost:3000
 ```
 
 ---
 
-## 5. Security & Cryptographic Invariants
+## 🏛️ Reverse-Engineering (REA) Clean-Room Compliance
 
-1. **Hardware-Locked Key Derivation**: Keys are generated locally via `PBKDF2HMAC` (SHA-256, 480,000 iterations) using the host machine's hardware UUID salt combined with `Fernet` AES-128-CBC encryption.
-2. **Write-Only BYOK Masking**: API keys entered into the UI are encrypted at rest immediately. The UI only ever sees masked fingerprints (e.g. `AIza••••8f2a`).
-3. **1-Click Emergency Panic Lock**: Instantly cancels running asyncio tasks, closes browser contexts, and seals the SQLite vault via `POST /api/v1/security/panic-lock`.
-4. **DoD 3-Pass Cryptographic Shredder**: The in-app uninstaller overwrites database files and `.env` secrets with cryptographically random bytes 3 times before unlinking them from disk.
+Built using clean-room specifications extracted via the REA (Reverse Engineer Anything) 5-stage methodology:
+1. **Trusted Sandbox Guard**: 30s graceful shutdown drain budget.
+2. **Channel-Locked FIFO Queues**: In-order lane serialization.
+3. **Hardware Fernet Vault**: Self-healing SQLite state with automatic WAL doctor repair.
+4. **Stealth Browser Humanizer**: Bezier mouse curvature and biological jitter.
+5. **Dynamic Skill Registry**: 106+ chained social skill playbooks.
+6. **Cron Lease Manager**: Collision-free distributed locks.
+7. **Omni-Social Bridges**: 10+ social platforms & encrypted backup sync.
 
 ---
 
-## 6. License
+## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+Distributed under the [MIT License](LICENSE). 100% Free and Open-Source for the community.

@@ -2,18 +2,36 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  AnimatedShieldIcon,
-  AnimatedRocketIcon,
-  AnimatedSunIcon,
-  AnimatedMoonIcon,
-  AnimatedLayersIcon,
-  AnimatedTerminalIcon,
-  AnimatedCheckIcon,
-  AnimatedAlertIcon,
-} from './AnimatedIcons';
+  Search,
+  Sparkles,
+  Zap,
+  Code,
+  User,
+  Paperclip,
+  Mic,
+  ArrowUp,
+  Layers,
+  Bot,
+  SlidersHorizontal,
+  Sun,
+  Moon,
+  ShieldCheck,
+  CheckCircle2,
+  X,
+  ChevronDown,
+  Plus,
+  Compass,
+  Cpu,
+  Terminal,
+  Shield,
+} from 'lucide-react';
 import { SecurityAndBYOKModal } from './SecurityAndBYOKModal';
-import { CreateAgentModal } from './CreateAgentModal';
+import { CreateAgentModal, ICON_MAP } from './CreateAgentModal';
 import { CreateSquadModal } from './CreateSquadModal';
+import { DailyBriefModal } from './DailyBriefModal';
+import { ToolExecutionPreviewCard } from './ToolExecutionPreviewCard';
+
+type AvatarState = 'IDLE' | 'THINKING' | 'USING_TOOL' | 'STREAMING' | 'AWAITING_APPROVAL';
 
 interface AgentItem {
   id: string;
@@ -39,6 +57,15 @@ interface SquadItem {
   is_custom?: boolean;
 }
 
+interface ToolExecutionData {
+  toolName: string;
+  parameters: Record<string, any>;
+  status: 'running' | 'completed';
+  resultSummary?: string;
+  browserUrl?: string;
+  browserDomPreview?: string;
+}
+
 interface ChatMessage {
   id: string;
   conversation_id: string;
@@ -51,7 +78,15 @@ interface ChatMessage {
   text: string;
   thought_process?: string[];
   tools_used?: Array<{ tool: string; status?: string; detail?: string }>;
+  tool_execution?: ToolExecutionData;
   created_at?: string;
+}
+
+interface AttachedFile {
+  name: string;
+  sizeKb: number;
+  type: string;
+  base64?: string;
 }
 
 const DEFAULT_AGENTS: AgentItem[] = [
@@ -59,13 +94,13 @@ const DEFAULT_AGENTS: AgentItem[] = [
     id: 'agent-scout',
     name: 'Scout',
     role: 'Research & Outlier Scout',
-    color: '#06b6d4',
-    badge_bg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-    avatar_symbol: '🔍',
+    color: '#CC785C',
+    badge_bg: 'bg-[#CC785C]/10 text-[#CC785C] border-[#CC785C]/30',
+    avatar_symbol: 'search',
     model: 'gemini-2.0-flash',
     persona: 'Analytical, data-driven scout that mines 30-day viral trend outliers and audience objections.',
     instructions: 'Focus on empirical outlier data, cited pattern benchmarks, and audience psychology.',
-    tools: ['DuckDuckGo Search', 'Outlier Trend Miner', 'Google Drive Cipher'],
+    tools: ['Stealth Browser', 'DuckDuckGo Search', 'Outlier Trend Miner'],
     starters: [
       'Mine top 30-day viral AI automation outliers on Reddit and X',
       'Perform competitor teardown on top 5 creator growth tools',
@@ -76,9 +111,9 @@ const DEFAULT_AGENTS: AgentItem[] = [
     id: 'agent-aura',
     name: 'Aura',
     role: 'Instagram & Visual Strategist',
-    color: '#ec4899',
-    badge_bg: 'bg-pink-500/10 text-pink-400 border-pink-500/30',
-    avatar_symbol: '✨',
+    color: '#788C5D',
+    badge_bg: 'bg-[#788C5D]/10 text-[#788C5D] border-[#788C5D]/30',
+    avatar_symbol: 'sparkles',
     model: 'gemini-2.0-flash',
     persona: 'Aesthetic director specializing in 0-3s retention hooks and 10-slide carousel outlines.',
     instructions: 'Engineer visual pacing, pattern interrupts, and Instagram keyword-dense SEO.',
@@ -93,9 +128,9 @@ const DEFAULT_AGENTS: AgentItem[] = [
     id: 'agent-volt',
     name: 'Volt',
     role: 'Viral Hook & Copy Chief',
-    color: '#f59e0b',
-    badge_bg: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-    avatar_symbol: '⚡',
+    color: '#D97757',
+    badge_bg: 'bg-[#D97757]/10 text-[#D97757] border-[#D97757]/30',
+    avatar_symbol: 'zap',
     model: 'gemini-2.0-flash',
     persona: 'Sharp, provocative copywriter that transforms complex concepts into high-CTR hooks.',
     instructions: 'Eliminate corporate fluff, apply curiosity gaps, and audit for shadowban risks.',
@@ -110,9 +145,9 @@ const DEFAULT_AGENTS: AgentItem[] = [
     id: 'agent-cipher',
     name: 'Cipher',
     role: 'Code & Automation Engineer',
-    color: '#8b5cf6',
-    badge_bg: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
-    avatar_symbol: '💻',
+    color: '#6A9BCC',
+    badge_bg: 'bg-[#6A9BCC]/10 text-[#6A9BCC] border-[#6A9BCC]/30',
+    avatar_symbol: 'code',
     model: 'gemini-2.0-flash',
     persona: 'Precise full-stack software engineer specializing in clean-room reverse engineering.',
     instructions: 'Write robust Python, FastAPI, Next.js, and Electron code with local encryption.',
@@ -143,9 +178,75 @@ const DEFAULT_SQUADS: SquadItem[] = [
     description: 'Fast-turnaround squad focused on outlier trend intelligence and rapid hook drafting.',
     member_ids: ['agent-scout', 'agent-volt'],
     starters: [
-      'Find today\'s trending tech debate and draft 3 provocative angles',
+      "Find today's trending tech debate and draft 3 provocative angles",
       'Analyze why recent AI developer videos went viral and write our own version',
     ],
+  },
+];
+
+const SEED_MESSAGES: ChatMessage[] = [
+  {
+    id: 'msg-seed-1',
+    conversation_id: 'conv-squad-omni',
+    sender_id: 'user',
+    sender_name: 'You',
+    sender_role: 'Squad Director',
+    sender_color: '#CC785C',
+    sender_avatar: 'user',
+    is_agent: false,
+    text: 'Squad, coordinate an omni-channel launch strategy for JellyFlex 2.0. Focus on our single-time GitHub invite code and zero-knowledge BYOK architecture. Scout, scrape top 30-day viral AI hooks first using the virtual browser.',
+  },
+  {
+    id: 'msg-seed-2',
+    conversation_id: 'conv-squad-omni',
+    sender_id: 'agent-scout',
+    sender_name: 'Scout',
+    sender_role: 'Research & Outlier Scout',
+    sender_color: '#CC785C',
+    sender_avatar: 'search',
+    is_agent: true,
+    thought_process: [
+      'Activated Stealth Virtual Browser sandbox with bezier mouse curvature',
+      'Navigated to https://instagram.com/explore/tags/aiworkflow',
+      'Scraped 18 competitor posts and benchmarked 30-day viral outliers',
+      'Identified top audience trigger: distrust of developer key leakage & SaaS vendor lock-in',
+    ],
+    tool_execution: {
+      toolName: 'stealth_browser.scrape_outliers',
+      parameters: {
+        target_url: 'https://instagram.com/explore/tags/aiworkflow',
+        stealth_profile: 'bezier_cubic_jitter',
+        max_results: 18,
+      },
+      status: 'completed',
+      resultSummary:
+        'Scraped 18 reels. Found 4 high-retention outliers (4.2x median baseline). Anti-bot checkpoint: 0% risk.',
+      browserUrl: 'https://instagram.com/explore/tags/aiworkflow',
+      browserDomPreview:
+        'Scraped <article class="reels-grid">. Top hook identified: "Stop giving away your API keys to random cloud wrappers."',
+    },
+    tools_used: [
+      { tool: 'Stealth Virtual Browser', status: 'completed' },
+      { tool: 'Outlier Miner', status: 'completed' },
+    ],
+    text: "I've completed our trend reconnaissance via our sandboxed virtual browser. The data is clear: audiences are exhausted by SaaS platforms demanding their API keys. Leading with our zero-knowledge PBKDF2 Fernet vault and single-time GitHub invite code (JELLYFLEX-COMMUNITY-2026) produces a 4.2x higher bookmark velocity. Volt, take these findings and craft the headline hooks.",
+  },
+  {
+    id: 'msg-seed-3',
+    conversation_id: 'conv-squad-omni',
+    sender_id: 'agent-volt',
+    sender_name: 'Volt',
+    sender_role: 'Viral Hook & Copy Chief',
+    sender_color: '#D97757',
+    sender_avatar: 'zap',
+    is_agent: true,
+    thought_process: [
+      "Ingesting Scout's outlier findings into ViralHookAndShadowbanSimulator",
+      'Filtering for 0-3 second pattern-interrupt velocity',
+      'Calculated viral retention score: 94/100',
+    ],
+    tools_used: [{ tool: 'Viral Simulator (Score: 94/100)', status: 'completed' }],
+    text: "Here are 3 high-impact hooks optimized for our launch:\n\n1. **Pattern Interrupt**: *\"99% of creators waste $80/mo on bloated AI dashboards. Here is what happens when you use an open-source agent squad.\"*\n2. **Curiosity Gap**: *\"How a single-time GitHub invite code permanently unlocks full local autonomy without developer telemetry.\"*\n3. **Contrarian Truth**: *\"Stop pasting your API keys into closed-source web wrappers. Own your runtime.\"*\n\nAura, format Hook #1 into our 10-slide visual carousel and 9:16 Reels storyboard.",
   },
 ];
 
@@ -154,20 +255,30 @@ export const AgentChatSuite: React.FC = () => {
   const [squads, setSquads] = useState<SquadItem[]>(DEFAULT_SQUADS);
   const [activeType, setActiveType] = useState<'agent' | 'squad'>('squad');
   const [activeId, setActiveId] = useState<string>('squad-omni');
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>(SEED_MESSAGES);
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showRightDrawer, setShowRightDrawer] = useState(true);
   const [showBYOKModal, setShowBYOKModal] = useState(false);
   const [showCreateAgentModal, setShowCreateAgentModal] = useState(false);
   const [showCreateSquadModal, setShowCreateSquadModal] = useState(false);
-  const [mascotStatus, setMascotStatus] = useState<'IDLE' | 'THINKING' | 'SYNCING'>('IDLE');
-  const [mascotSpeech, setMascotSpeech] = useState<string>('Ready to coordinate specialist agents.');
+  const [showDailyBriefModal, setShowDailyBriefModal] = useState(false);
 
+  // Reactive Avatar Engine State
+  const [avatarState, setAvatarState] = useState<AvatarState>('IDLE');
+  const [activeToolName, setActiveToolName] = useState<string>('');
+  const [mascotSpeech, setMascotSpeech] = useState<string>(
+    'Ready to coordinate specialist agents.'
+  );
+
+  // File Upload & Voice State
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch agents, squads, and chat history
+  // Fetch agents, squads
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -178,7 +289,18 @@ export const AgentChatSuite: React.FC = () => {
 
         if (agentsRes && agentsRes.ok) {
           const aData = await agentsRes.json();
-          if (aData.agents?.length) setAgents(aData.agents);
+          if (aData.agents?.length) {
+            // Clean up avatar symbols in case backend had old emojis
+            const sanitized = aData.agents.map((ag: AgentItem) => {
+              let sym = ag.avatar_symbol;
+              if (sym === '🔍') sym = 'search';
+              else if (sym === '✨') sym = 'sparkles';
+              else if (sym === '⚡') sym = 'zap';
+              else if (sym === '💻') sym = 'code';
+              return { ...ag, avatar_symbol: sym };
+            });
+            setAgents(sanitized);
+          }
         }
         if (squadsRes && squadsRes.ok) {
           const sData = await squadsRes.json();
@@ -191,15 +313,19 @@ export const AgentChatSuite: React.FC = () => {
 
   // Fetch conversation history when activeId changes
   useEffect(() => {
+    if (activeId === 'squad-omni' && chatHistory.length === 3) return; // Keep seed messages
+
     const fetchHistory = async () => {
       const convId = `conv-${activeId}`;
       try {
         const res = await fetch(`http://127.0.0.1:8000/api/v1/chat/history/${convId}`);
         if (res.ok) {
           const data = await res.json();
-          setChatHistory(data.messages || []);
-        } else {
-          setChatHistory([]);
+          if (data.messages?.length) {
+            setChatHistory(data.messages);
+          } else {
+            setChatHistory([]);
+          }
         }
       } catch (e) {
         setChatHistory([]);
@@ -229,17 +355,113 @@ export const AgentChatSuite: React.FC = () => {
     });
   };
 
+  // Helper to render SVG icon for agent
+  const renderGlyph = (symbol: string, className = 'w-4 h-4') => {
+    if (symbol === 'user') return <User className={className} />;
+    const IconComponent = ICON_MAP[symbol] || Bot;
+    return <IconComponent className={className} />;
+  };
+
+  // Handle Voice Speech-to-Text via Web Speech API
+  const handleToggleVoice = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech Recognition is supported in Chrome, Edge, and Electron.');
+      return;
+    }
+
+    if (isRecording) {
+      setIsRecording(false);
+      setAvatarState('IDLE');
+      return;
+    }
+
+    try {
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setAvatarState('STREAMING');
+        setMascotSpeech('Listening to voice input...');
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setInputText(transcript);
+      };
+
+      recognition.onerror = () => {
+        setIsRecording(false);
+        setAvatarState('IDLE');
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+        setAvatarState('IDLE');
+        setMascotSpeech('Voice transcription ingested.');
+      };
+
+      recognition.start();
+    } catch (err) {
+      setIsRecording(false);
+      setAvatarState('IDLE');
+    }
+  };
+
+  // Handle File Upload & Attachment
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result?.toString().split(',')[1];
+        setAttachedFiles((prev) => [
+          ...prev,
+          {
+            name: file.name,
+            sizeKb: Math.round(file.size / 1024),
+            type: file.type || 'application/octet-stream',
+            base64,
+          },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    setAvatarState('USING_TOOL');
+    setActiveToolName('vision_analyzer');
+    setMascotSpeech(`Ingested attachment for multimodal vision analysis.`);
+    setTimeout(() => setAvatarState('IDLE'), 2000);
+  };
+
+  const removeAttachedFile = (idx: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const handleSendMessage = async (textToSend?: string) => {
     const message = (textToSend || inputText).trim();
-    if (!message || isSending) return;
+    if (!message && attachedFiles.length === 0) return;
+    if (isSending) return;
 
     setInputText('');
+    const currentFiles = [...attachedFiles];
+    setAttachedFiles([]);
     setIsSending(true);
-    setMascotStatus('THINKING');
+
+    // Reactive avatar state transition
+    setAvatarState('THINKING');
     setMascotSpeech(
       activeType === 'squad'
-        ? `Coordinating multi-agent squad collaboration for: "${message.slice(0, 30)}..."`
-        : `${activeAgent?.name || 'Agent'} is processing prompt...`
+        ? `Coordinating multi-agent squad collaboration...`
+        : `${activeAgent?.name || 'Agent'} is formulating response...`
     );
 
     // Optimistically add user message
@@ -249,15 +471,21 @@ export const AgentChatSuite: React.FC = () => {
       sender_id: 'user',
       sender_name: 'You',
       sender_role: activeType === 'squad' ? 'Squad Director' : 'Architect',
-      sender_color: '#6366f1',
-      sender_avatar: '👤',
+      sender_color: '#CC785C',
+      sender_avatar: 'user',
       is_agent: false,
-      text: message,
+      text:
+        currentFiles.length > 0
+          ? `[Attached ${currentFiles.map((f) => f.name).join(', ')}]\n\n${message}`
+          : message,
     };
     setChatHistory((prev) => [...prev, tempUserMsg]);
 
     try {
       if (activeType === 'squad') {
+        setAvatarState('USING_TOOL');
+        setActiveToolName('stealth_browser');
+
         const res = await fetch('http://127.0.0.1:8000/api/v1/chat/squad', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -296,8 +524,8 @@ export const AgentChatSuite: React.FC = () => {
       console.error('Chat send error:', err);
     } finally {
       setIsSending(false);
-      setMascotStatus('IDLE');
-      setMascotSpeech('All responses delivered and state encrypted.');
+      setAvatarState('IDLE');
+      setMascotSpeech('State preserved in hardware Fernet vault.');
     }
   };
 
@@ -309,56 +537,106 @@ export const AgentChatSuite: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30">
+    <div className="h-screen w-screen flex overflow-hidden bg-[#FAF9F5] text-[#141413] dark:bg-[#141413] dark:text-[#FAF9F5] font-sans">
       {/* 1. LEFT SIDEBAR: AGENT & SQUAD NAVIGATOR */}
-      <aside className="w-72 lg:w-80 h-full flex flex-col border-r border-white/10 bg-slate-900/70 backdrop-blur-xl shrink-0">
-        {/* Brand Header */}
-        <div className="h-16 border-b border-white/10 px-4 flex items-center justify-between">
+      <aside className="w-72 lg:w-80 h-full flex flex-col border-r border-[#E8E6DC] dark:border-[#302E2B] bg-[#F5F4ED] dark:bg-[#191816] shrink-0">
+        {/* Brand Header with Mascot */}
+        <div className="h-16 border-b border-[#E8E6DC] dark:border-[#302E2B] px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl overflow-hidden border border-indigo-400/40 shadow-[0_0_15px_rgba(99,102,241,0.25)] bg-slate-800 shrink-0">
-              <img
-                src="/brand-mascot.png"
-                alt="JellyFlex"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/mascot.jpg';
-                }}
-              />
+            <div className="relative">
+              <div
+                className={`w-9 h-9 rounded-xl overflow-hidden border transition-all duration-200 bg-white dark:bg-[#242320] shrink-0 ${
+                  avatarState === 'THINKING'
+                    ? 'border-[#CC785C] ring-2 ring-[#CC785C]/30'
+                    : avatarState === 'USING_TOOL'
+                    ? 'border-[#788C5D] ring-2 ring-[#788C5D]/30'
+                    : 'border-[#E8E6DC] dark:border-[#302E2B]'
+                }`}
+              >
+                <img
+                  src="/brand-mascot.png"
+                  alt="JellyFlex"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/mascot.jpg';
+                  }}
+                />
+              </div>
+              {avatarState !== 'IDLE' && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#CC785C] animate-ping" />
+              )}
             </div>
+
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm text-white tracking-tight">JellyFlex</span>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="font-semibold text-sm text-[#141413] dark:text-[#FAF9F5] tracking-tight">
+                  JellyFlex
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-semibold bg-[#CC785C]/15 text-[#CC785C] border border-[#CC785C]/30">
                   v2.0
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400 font-mono">Conversational AI Suite</div>
+              <div className="text-[10px] text-[#5E5D59] dark:text-[#87867F] font-mono">
+                Conversational Agent Suite
+              </div>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            title="Toggle Theme"
-          >
-            {isDarkMode ? <AnimatedSunIcon className="w-4 h-4" /> : <AnimatedMoonIcon className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Daily Brief Header Trigger */}
+            <button
+              type="button"
+              onClick={() => setShowDailyBriefModal(true)}
+              className="p-1.5 rounded-lg text-[#5E5D59] hover:text-[#CC785C] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              title="Open Executive Daily Briefing"
+            >
+              <Zap className="w-4 h-4" />
+            </button>
+
+            {/* Theme Toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg text-[#5E5D59] hover:text-[#141413] dark:hover:text-[#FAF9F5] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              title="Toggle Theme"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-[#CC785C]" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Channels & Agents */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-6">
-          {/* GROUP SQUADS (WhatsApp Style) */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-5">
+          {/* Executive Daily Brief Banner Card */}
+          <button
+            type="button"
+            onClick={() => setShowDailyBriefModal(true)}
+            className="w-full p-3 rounded-xl bg-white dark:bg-[#242320] border border-[#E8E6DC] dark:border-[#302E2B] hover:border-[#CC785C]/50 transition-all text-left space-y-1 shadow-xs cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-[#141413] dark:text-[#FAF9F5] flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-[#CC785C]" /> Daily Executive Brief
+              </span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#CC785C]/15 text-[#CC785C] font-semibold">
+                Oct 17
+              </span>
+            </div>
+            <p className="text-[11px] text-[#5E5D59] dark:text-[#B0AEA5] line-clamp-1">
+              Autonomous overnight run: 14 posts dispatched • 92.8 viral score avg
+            </p>
+          </button>
+
+          {/* GROUP SQUADS */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-2 pb-1">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
-                <AnimatedLayersIcon className="w-3 h-3 text-indigo-400" />
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#5E5D59] dark:text-[#87867F] font-semibold flex items-center gap-1.5">
+                <Layers className="w-3 h-3 text-[#CC785C]" />
                 Group Squads
               </span>
               <button
                 type="button"
                 onClick={() => setShowCreateSquadModal(true)}
-                className="text-[10px] text-indigo-400 hover:text-indigo-300 font-mono flex items-center gap-0.5 hover:underline cursor-pointer"
+                className="text-[10px] text-[#CC785C] hover:text-[#D97757] font-mono flex items-center gap-0.5 hover:underline cursor-pointer"
               >
                 + New Squad
               </button>
@@ -378,28 +656,29 @@ export const AgentChatSuite: React.FC = () => {
                     setActiveType('squad');
                     setActiveId(squad.id);
                   }}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-2xl text-left transition-all ${
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${
                     active
-                      ? 'bg-indigo-600/20 border border-indigo-500/50 text-white shadow-[0_0_15px_rgba(99,102,241,0.15)]'
-                      : 'hover:bg-white/5 text-slate-300 border border-transparent'
+                      ? 'bg-white dark:bg-[#242320] border border-[#CC785C]/60 text-[#141413] dark:text-[#FAF9F5] shadow-xs'
+                      : 'hover:bg-black/5 dark:hover:bg-white/5 text-[#5E5D59] dark:text-[#B0AEA5] border border-transparent'
                   }`}
                 >
-                  {/* Overlapping member avatars */}
-                  <div className="flex -space-x-2 shrink-0">
+                  <div className="flex -space-x-1.5 shrink-0">
                     {squadMembers.slice(0, 3).map((m, idx) => (
                       <div
                         key={idx}
-                        className="w-6 h-6 rounded-full border border-slate-900 flex items-center justify-center text-[10px] shadow-sm font-bold"
-                        style={{ backgroundColor: `${m.color}35`, color: m.color }}
+                        className="w-6 h-6 rounded-lg border border-white dark:border-[#191816] flex items-center justify-center shadow-xs"
+                        style={{ backgroundColor: `${m.color}15`, color: m.color }}
                       >
-                        {m.avatar_symbol}
+                        {renderGlyph(m.avatar_symbol, 'w-3 h-3')}
                       </div>
                     ))}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-xs text-white truncate">{squad.name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">
+                    <div className="font-medium text-xs text-[#141413] dark:text-[#FAF9F5] truncate">
+                      {squad.name}
+                    </div>
+                    <div className="text-[10px] text-[#5E5D59] dark:text-[#87867F] font-mono">
                       {squad.member_ids.length} Collaborative Agents
                     </div>
                   </div>
@@ -411,14 +690,14 @@ export const AgentChatSuite: React.FC = () => {
           {/* 1-ON-1 SPECIALIST AGENTS */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between px-2 pb-1">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
-                <AnimatedTerminalIcon className="w-3 h-3 text-cyan-400" />
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#5E5D59] dark:text-[#87867F] font-semibold flex items-center gap-1.5">
+                <Bot className="w-3 h-3 text-[#788C5D]" />
                 Specialist Agents (1-on-1)
               </span>
               <button
                 type="button"
                 onClick={() => setShowCreateAgentModal(true)}
-                className="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center gap-0.5 hover:underline cursor-pointer"
+                className="text-[10px] text-[#788C5D] hover:text-[#5E5D59] font-mono flex items-center gap-0.5 hover:underline cursor-pointer"
               >
                 + New Agent
               </button>
@@ -434,33 +713,35 @@ export const AgentChatSuite: React.FC = () => {
                     setActiveType('agent');
                     setActiveId(agent.id);
                   }}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-2xl text-left transition-all ${
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${
                     active
-                      ? 'bg-white/10 border border-white/20 text-white shadow-[0_0_15px_rgba(255,255,255,0.08)]'
-                      : 'hover:bg-white/5 text-slate-300 border border-transparent'
+                      ? 'bg-white dark:bg-[#242320] border border-[#CC785C]/60 text-[#141413] dark:text-[#FAF9F5] shadow-xs'
+                      : 'hover:bg-black/5 dark:hover:bg-white/5 text-[#5E5D59] dark:text-[#B0AEA5] border border-transparent'
                   }`}
                 >
                   <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 border"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border"
                     style={{
-                      backgroundColor: `${agent.color}25`,
-                      borderColor: `${agent.color}50`,
+                      backgroundColor: `${agent.color}15`,
+                      borderColor: `${agent.color}35`,
                       color: agent.color,
                     }}
                   >
-                    {agent.avatar_symbol}
+                    {renderGlyph(agent.avatar_symbol, 'w-3.5 h-3.5')}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-white truncate">{agent.name}</span>
+                      <span className="font-medium text-xs text-[#141413] dark:text-[#FAF9F5] truncate">
+                        {agent.name}
+                      </span>
                       <span
-                        className="w-2 h-2 rounded-full"
+                        className="w-1.5 h-1.5 rounded-full"
                         style={{ backgroundColor: agent.color }}
                         title="Online & Ready"
                       />
                     </div>
-                    <div className="text-[10px] text-slate-400 truncate">{agent.role}</div>
+                    <div className="text-[10px] text-[#5E5D59] dark:text-[#87867F] truncate">{agent.role}</div>
                   </div>
                 </button>
               );
@@ -469,24 +750,24 @@ export const AgentChatSuite: React.FC = () => {
         </div>
 
         {/* Sidebar Footer: BYOK Vault & Status */}
-        <div className="p-3 border-t border-white/10 bg-black/20 space-y-2">
+        <div className="p-3 border-t border-[#E8E6DC] dark:border-[#302E2B] bg-[#F0EFEA] dark:bg-[#141413] space-y-2">
           <button
             type="button"
             onClick={() => setShowBYOKModal(true)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white dark:bg-[#1D1C1A] hover:bg-[#E8E6DC]/50 dark:hover:bg-[#242320] border border-[#E8E6DC] dark:border-[#302E2B] text-xs font-medium transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-2">
-              <AnimatedShieldIcon active={true} className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center gap-2 text-[#141413] dark:text-[#FAF9F5]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#788C5D]" />
               <span>BYOK Key Vault</span>
             </div>
-            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#788C5D]/15 text-[#788C5D] font-medium">
               Encrypted
             </span>
           </button>
 
-          <div className="px-2 flex items-center justify-between text-[10px] font-mono text-slate-500">
+          <div className="px-2 flex items-center justify-between text-[10px] font-mono text-[#87867F]">
             <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#788C5D]" />
               Agno OS • SQLite
             </span>
             <span>Clean-Room Core</span>
@@ -494,35 +775,37 @@ export const AgentChatSuite: React.FC = () => {
         </div>
       </aside>
 
-      {/* 2. CENTER STAGE: CLEAN CONVERSATIONAL FEED */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-slate-950/60 relative">
+      {/* 2. CENTER STAGE: CLEAN EDITORIAL CONVERSATIONAL FEED */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#FAF9F5] dark:bg-[#141413] relative">
         {/* Top Chat Header */}
-        <header className="h-16 border-b border-white/10 px-6 flex items-center justify-between bg-slate-900/40 backdrop-blur-md shrink-0">
+        <header className="h-16 border-b border-[#E8E6DC] dark:border-[#302E2B] px-6 flex items-center justify-between bg-[#FAF9F5] dark:bg-[#141413] shrink-0">
           <div className="flex items-center gap-3">
             {activeType === 'squad' && activeSquad ? (
               <>
-                <div className="flex -space-x-2">
+                <div className="flex -space-x-1.5">
                   {activeSquad.member_ids
                     .map((mid) => agents.find((a) => a.id === mid))
                     .filter(Boolean)
                     .map((m, i) => (
                       <div
                         key={i}
-                        className="w-8 h-8 rounded-full border-2 border-slate-950 flex items-center justify-center text-xs font-bold"
-                        style={{ backgroundColor: `${m?.color}35`, color: m?.color }}
+                        className="w-7 h-7 rounded-lg border border-white dark:border-[#141413] flex items-center justify-center shadow-xs"
+                        style={{ backgroundColor: `${m?.color}15`, color: m?.color }}
                       >
-                        {m?.avatar_symbol}
+                        {renderGlyph(m?.avatar_symbol || 'bot', 'w-3.5 h-3.5')}
                       </div>
                     ))}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="font-bold text-sm text-white">{activeSquad.name}</h2>
-                    <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
+                    <h2 className="font-semibold text-sm text-[#141413] dark:text-[#FAF9F5]">
+                      {activeSquad.name}
+                    </h2>
+                    <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-[#CC785C]/15 border border-[#CC785C]/30 text-[#CC785C] font-medium">
                       Coordinated Squad
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-400 truncate max-w-md">
+                  <div className="text-[11px] text-[#5E5D59] dark:text-[#87867F] truncate max-w-md">
                     {activeSquad.description}
                   </div>
                 </div>
@@ -530,33 +813,35 @@ export const AgentChatSuite: React.FC = () => {
             ) : activeAgent ? (
               <>
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-base border"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center border"
                   style={{
-                    backgroundColor: `${activeAgent.color}25`,
-                    borderColor: `${activeAgent.color}60`,
+                    backgroundColor: `${activeAgent.color}15`,
+                    borderColor: `${activeAgent.color}40`,
                     color: activeAgent.color,
                   }}
                 >
-                  {activeAgent.avatar_symbol}
+                  {renderGlyph(activeAgent.avatar_symbol, 'w-4 h-4')}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="font-bold text-sm text-white">{activeAgent.name}</h2>
+                    <h2 className="font-semibold text-sm text-[#141413] dark:text-[#FAF9F5]">
+                      {activeAgent.name}
+                    </h2>
                     <span
                       className="px-2 py-0.5 rounded text-[9px] font-mono border"
                       style={{
                         backgroundColor: `${activeAgent.color}15`,
-                        borderColor: `${activeAgent.color}40`,
+                        borderColor: `${activeAgent.color}35`,
                         color: activeAgent.color,
                       }}
                     >
                       {activeAgent.role}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">
+                    <span className="text-[10px] font-mono text-[#5E5D59] dark:text-[#87867F]">
                       {activeAgent.model}
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-400 truncate max-w-md">
+                  <div className="text-[11px] text-[#5E5D59] dark:text-[#87867F] truncate max-w-md">
                     {activeAgent.persona}
                   </div>
                 </div>
@@ -567,181 +852,214 @@ export const AgentChatSuite: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setShowRightDrawer((prev) => !prev)}
-              className="px-3 py-1.5 rounded-xl text-xs font-mono bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+              onClick={() => setShowDailyBriefModal(true)}
+              className="px-3 py-1.5 rounded-xl text-xs font-mono bg-[#CC785C]/10 hover:bg-[#CC785C]/20 border border-[#CC785C]/30 text-[#CC785C] flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span>{showRightDrawer ? 'Hide Companion' : 'Show Companion'}</span>
+              <Zap className="w-3.5 h-3.5" />
+              <span>Daily Brief</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowRightDrawer((prev) => !prev)}
+              className="px-3 py-1.5 rounded-xl text-xs font-mono bg-[#F5F4ED] dark:bg-[#1D1C1A] hover:bg-[#E8E6DC] dark:hover:bg-[#242320] border border-[#E8E6DC] dark:border-[#302E2B] text-[#5E5D59] dark:text-[#FAF9F5] flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>{showRightDrawer ? 'Hide Inspector' : 'Show Inspector'}</span>
             </button>
           </div>
         </header>
 
-        {/* Message Feed */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
-          {/* Empty state when no messages */}
-          {chatHistory.length === 0 && (
-            <div className="max-w-xl mx-auto py-12 flex flex-col items-center text-center space-y-5">
+        {/* Message Feed: Literary max-w-3xl Reading Column */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+          <div className="max-w-3xl mx-auto space-y-6">
+            {/* Chat Messages */}
+            {chatHistory.map((msg) => (
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl border shadow-xl"
-                style={{
-                  backgroundColor: activeType === 'squad' ? '#6366f125' : `${activeAgent?.color}25`,
-                  borderColor: activeType === 'squad' ? '#6366f160' : `${activeAgent?.color}60`,
-                }}
+                key={msg.id}
+                className={`flex gap-3.5 ${
+                  msg.is_agent ? 'mr-auto w-full' : 'ml-auto flex-row-reverse max-w-2xl'
+                }`}
               >
-                {activeType === 'squad' ? '👥' : activeAgent?.avatar_symbol || '🤖'}
-              </div>
+                {/* Avatar Icon */}
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs"
+                  style={{
+                    backgroundColor: msg.is_agent ? `${msg.sender_color}15` : '#CC785C15',
+                    borderColor: msg.is_agent ? `${msg.sender_color}40` : '#CC785C',
+                    color: msg.is_agent ? msg.sender_color : '#CC785C',
+                  }}
+                >
+                  {renderGlyph(msg.sender_avatar, 'w-4 h-4')}
+                </div>
 
-              <div>
-                <h3 className="font-bold text-lg text-white">
-                  {activeType === 'squad'
-                    ? `Collaborative Squad: ${activeSquad?.name}`
-                    : `Direct Line to ${activeAgent?.name}`}
-                </h3>
-                <p className="text-xs text-slate-400 mt-1 max-w-md leading-relaxed">
-                  {activeType === 'squad'
-                    ? activeSquad?.description
-                    : activeAgent?.persona}
-                </p>
-              </div>
+                {/* Message Body */}
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  {/* Author Header */}
+                  <div
+                    className={`flex items-center gap-2 text-[11px] ${
+                      msg.is_agent ? 'justify-start' : 'justify-end'
+                    }`}
+                  >
+                    <span className="font-semibold text-[#141413] dark:text-[#FAF9F5]">
+                      {msg.sender_name}
+                    </span>
+                    <span
+                      className="px-1.5 py-0.2 rounded text-[9px] font-mono border"
+                      style={{
+                        backgroundColor: `${msg.sender_color}15`,
+                        borderColor: `${msg.sender_color}35`,
+                        color: msg.sender_color,
+                      }}
+                    >
+                      {msg.sender_role}
+                    </span>
+                  </div>
 
-              {/* Starter chips */}
-              <div className="w-full space-y-2 pt-2">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
-                  Recommended Conversation Starters
-                </span>
-                <div className="flex flex-col gap-2">
-                  {(activeType === 'squad' ? activeSquad?.starters : activeAgent?.starters)?.map(
-                    (st, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => handleSendMessage(st)}
-                        className="p-3 rounded-xl bg-slate-900/80 hover:bg-white/10 border border-white/10 text-left text-xs text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-between group"
-                      >
-                        <span>{st}</span>
-                        <span className="text-slate-500 group-hover:text-indigo-400 font-mono text-sm">
-                          →
+                  {/* Live Tool Execution & Browser Viewport Preview Card */}
+                  {msg.tool_execution && (
+                    <ToolExecutionPreviewCard
+                      toolName={msg.tool_execution.toolName}
+                      parameters={msg.tool_execution.parameters}
+                      status={msg.tool_execution.status}
+                      resultSummary={msg.tool_execution.resultSummary}
+                      browserUrl={msg.tool_execution.browserUrl}
+                      browserDomPreview={msg.tool_execution.browserDomPreview}
+                    />
+                  )}
+
+                  {/* Collapsible Thinking Process Foldout */}
+                  {msg.thought_process && msg.thought_process.length > 0 && (
+                    <details className="group rounded-xl bg-[#F5F4ED] dark:bg-[#1D1C1A] border border-[#E8E6DC] dark:border-[#302E2B] p-2.5 text-xs text-[#5E5D59] dark:text-[#87867F]">
+                      <summary className="cursor-pointer font-mono text-[10px] text-[#CC785C] uppercase tracking-wider flex items-center gap-1.5 select-none font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#CC785C] animate-pulse" />
+                        Thinking Process ({msg.thought_process.length} steps)
+                      </summary>
+                      <ul className="mt-2 space-y-1 pl-4 list-disc text-[11px] text-[#5E5D59] dark:text-[#B0AEA5] font-mono">
+                        {msg.thought_process.map((t, idx) => (
+                          <li key={idx}>{t}</li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+
+                  {/* Main Text Content */}
+                  <div
+                    className={`p-4 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
+                      msg.is_agent
+                        ? 'bg-white dark:bg-[#1D1C1A] border border-[#E8E6DC] dark:border-[#302E2B] text-[#141413] dark:text-[#FAF9F5] shadow-xs'
+                        : 'bg-[#CC785C] text-white shadow-xs'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+
+                  {/* Tools used pill */}
+                  {msg.tools_used && msg.tools_used.length > 0 && (
+                    <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                      {msg.tools_used.map((t, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-0.5 rounded text-[9px] font-mono bg-[#F5F4ED] dark:bg-[#242320] border border-[#E8E6DC] dark:border-[#302E2B] text-[#5E5D59] dark:text-[#87867F] flex items-center gap-1"
+                        >
+                          <Zap className="w-2.5 h-2.5 text-[#CC785C]" />
+                          {t.tool}
                         </span>
-                      </button>
-                    )
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
-          )}
+            ))}
 
-          {/* Chat Messages */}
-          {chatHistory.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex gap-3 max-w-3xl ${
-                msg.is_agent ? 'mr-auto' : 'ml-auto flex-row-reverse'
-              }`}
-            >
-              {/* Avatar */}
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 border shadow-md"
-                style={{
-                  backgroundColor: msg.is_agent ? `${msg.sender_color}30` : '#6366f130',
-                  borderColor: msg.is_agent ? msg.sender_color : '#6366f1',
-                  color: msg.is_agent ? msg.sender_color : '#fff',
-                }}
-              >
-                {msg.sender_avatar}
-              </div>
-
-              {/* Message Body */}
-              <div className="space-y-1.5 min-w-0">
-                {/* Author Pill */}
-                <div
-                  className={`flex items-center gap-2 text-[11px] ${
-                    msg.is_agent ? 'justify-start' : 'justify-end'
-                  }`}
-                >
-                  <span className="font-semibold text-white">{msg.sender_name}</span>
-                  <span
-                    className="px-1.5 py-0.2 rounded text-[9px] font-mono border"
-                    style={{
-                      backgroundColor: `${msg.sender_color}15`,
-                      borderColor: `${msg.sender_color}40`,
-                      color: msg.sender_color,
-                    }}
-                  >
-                    {msg.sender_role}
+            {/* Loading indicator */}
+            {isSending && (
+              <div className="flex items-center gap-3 mr-auto max-w-md">
+                <div className="w-8 h-8 rounded-lg bg-[#CC785C]/15 border border-[#CC785C]/35 flex items-center justify-center text-[#CC785C] text-xs">
+                  <Zap className="w-4 h-4 animate-pulse" />
+                </div>
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-[#1D1C1A] border border-[#E8E6DC] dark:border-[#302E2B] flex items-center gap-2 text-xs text-[#5E5D59] dark:text-[#B0AEA5] shadow-xs">
+                  <span className="w-2 h-2 rounded-full bg-[#CC785C] animate-ping" />
+                  <span>
+                    {activeType === 'squad'
+                      ? 'Squad members collaborating across domain lanes...'
+                      : `${activeAgent?.name || 'Agent'} is formulating response...`}
                   </span>
                 </div>
+              </div>
+            )}
 
-                {/* Collapsible Thinking Process Foldout */}
-                {msg.thought_process && msg.thought_process.length > 0 && (
-                  <details className="group rounded-xl bg-slate-900/60 border border-white/5 p-2.5 text-xs text-slate-400">
-                    <summary className="cursor-pointer font-mono text-[10px] text-indigo-400 uppercase tracking-wider flex items-center gap-1.5 select-none">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                      Thinking Process ({msg.thought_process.length} steps)
-                    </summary>
-                    <ul className="mt-2 space-y-1 pl-4 list-disc text-[11px] text-slate-400 font-mono">
-                      {msg.thought_process.map((t, idx) => (
-                        <li key={idx}>{t}</li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
 
-                {/* Main Text Content */}
+        {/* Bottom Input Composer (Anthropic Style centered max-w-3xl) */}
+        <div className="p-4 border-t border-[#E8E6DC] dark:border-[#302E2B] bg-[#FAF9F5] dark:bg-[#141413] shrink-0 space-y-2">
+          {/* Attached Files Pills */}
+          {attachedFiles.length > 0 && (
+            <div className="max-w-3xl mx-auto flex items-center gap-2 flex-wrap">
+              {attachedFiles.map((f, i) => (
                 <div
-                  className={`p-4 rounded-2xl text-xs leading-relaxed whitespace-pre-wrap ${
-                    msg.is_agent
-                      ? 'bg-slate-900/90 border border-white/10 text-slate-200'
-                      : 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.25)]'
-                  }`}
+                  key={i}
+                  className="flex items-center gap-2 px-3 py-1 rounded-xl bg-[#F5F4ED] dark:bg-[#242320] border border-[#E8E6DC] dark:border-[#302E2B] text-xs text-[#141413] dark:text-[#FAF9F5] font-mono"
                 >
-                  {msg.text}
+                  <Paperclip className="w-3 h-3 text-[#CC785C]" />
+                  <span>
+                    {f.name} ({f.sizeKb} KB)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeAttachedFile(i)}
+                    className="text-[#87867F] hover:text-[#141413] dark:hover:text-[#FAF9F5] cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
-
-                {/* Tools used pill */}
-                {msg.tools_used && msg.tools_used.length > 0 && (
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    {msg.tools_used.map((t, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-0.5 rounded text-[9px] font-mono bg-white/5 border border-white/10 text-slate-400"
-                      >
-                        ⚡ {t.tool}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {/* Loading indicator */}
-          {isSending && (
-            <div className="flex items-center gap-3 mr-auto max-w-md">
-              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-xs animate-pulse">
-                ⚡
-              </div>
-              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-white/10 flex items-center gap-2 text-xs text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping" />
-                <span>
-                  {activeType === 'squad'
-                    ? 'Squad members synthesizing collaborative responses...'
-                    : `${activeAgent?.name || 'Agent'} is formulating response...`}
-                </span>
-              </div>
+              ))}
             </div>
           )}
 
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Bottom Input Composer */}
-        <div className="p-4 border-t border-white/10 bg-slate-900/50 backdrop-blur-lg shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="max-w-4xl mx-auto flex items-end gap-2 p-2 rounded-2xl bg-slate-900 border border-white/15 focus-within:border-indigo-500/70 shadow-2xl transition-all"
+            className="max-w-3xl mx-auto flex items-end gap-2 p-2 rounded-2xl bg-white dark:bg-[#1D1C1A] border border-[#E8E6DC] dark:border-[#302E2B] focus-within:border-[#CC785C] shadow-sm transition-all"
           >
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              multiple
+              accept="image/*,video/*,.pdf,.txt,.csv"
+              className="hidden"
+            />
+
+            {/* File upload trigger */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2.5 rounded-xl text-[#5E5D59] dark:text-[#87867F] hover:text-[#141413] dark:hover:text-[#FAF9F5] hover:bg-[#F5F4ED] dark:hover:bg-[#242320] transition-colors cursor-pointer"
+              title="Upload media or documents (.png, .mp4, .pdf)"
+            >
+              <Paperclip className="w-4 h-4" />
+            </button>
+
+            {/* Voice microphone trigger */}
+            <button
+              type="button"
+              onClick={handleToggleVoice}
+              className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+                isRecording
+                  ? 'bg-[#CC785C]/20 text-[#CC785C] border border-[#CC785C]/40 animate-pulse'
+                  : 'text-[#5E5D59] dark:text-[#87867F] hover:text-[#141413] dark:hover:text-[#FAF9F5] hover:bg-[#F5F4ED] dark:hover:bg-[#242320]'
+              }`}
+              title={isRecording ? 'Listening (Click to stop)' : 'Voice Input (Speech-to-Text)'}
+            >
+              <Mic className="w-4 h-4" />
+            </button>
+
             <textarea
               rows={2}
               value={inputText}
@@ -749,45 +1067,59 @@ export const AgentChatSuite: React.FC = () => {
               onKeyDown={handleKeyDown}
               placeholder={
                 activeType === 'squad'
-                  ? `Message ${activeSquad?.name} (Shift+Enter for newline)...`
-                  : `Message ${activeAgent?.name} (${activeAgent?.role})...`
+                  ? `Reply to ${activeSquad?.name} (Shift+Enter for newline)...`
+                  : `Reply to ${activeAgent?.name} (${activeAgent?.role})...`
               }
-              className="flex-1 bg-transparent border-0 resize-none text-xs text-white placeholder-slate-500 focus:outline-none p-2 font-sans"
+              className="flex-1 bg-transparent border-0 resize-none text-xs text-[#141413] dark:text-[#FAF9F5] placeholder-[#87867F] focus:outline-none p-2 font-sans"
             />
 
             <button
               type="submit"
-              disabled={isSending || !inputText.trim()}
-              className="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] shrink-0 cursor-pointer"
+              disabled={isSending || (!inputText.trim() && attachedFiles.length === 0)}
+              className="p-2.5 rounded-xl bg-[#CC785C] hover:bg-[#D97757] text-white disabled:opacity-40 transition-all shadow-xs shrink-0 cursor-pointer"
             >
-              <AnimatedRocketIcon className="w-4 h-4" />
+              <ArrowUp className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
         </div>
       </main>
 
-      {/* 3. RIGHT COMPANION DRAWER: VOXEL MASCOT & TELEMETRY */}
+      {/* 3. RIGHT COMPANION DRAWER: REACTIVE RESPONDER AVATAR & INSPECTOR */}
       {showRightDrawer && (
-        <aside className="w-72 lg:w-80 h-full border-l border-white/10 bg-slate-900/70 backdrop-blur-xl p-5 flex flex-col justify-between shrink-0 overflow-y-auto">
+        <aside className="w-72 lg:w-80 h-full border-l border-[#E8E6DC] dark:border-[#302E2B] bg-[#F5F4ED] dark:bg-[#191816] p-5 flex flex-col justify-between shrink-0 overflow-y-auto">
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
-                Companion Matrix
+            <div className="flex items-center justify-between border-b border-[#E8E6DC] dark:border-[#302E2B] pb-3">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#5E5D59] dark:text-[#87867F] font-semibold">
+                Companion Engine
               </span>
-              <span className="text-[10px] font-mono text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {mascotStatus}
+              <span
+                className={`text-[10px] font-mono font-semibold flex items-center gap-1 ${
+                  avatarState === 'THINKING'
+                    ? 'text-[#CC785C]'
+                    : avatarState === 'USING_TOOL'
+                    ? 'text-[#788C5D]'
+                    : avatarState === 'STREAMING'
+                    ? 'text-[#6A9BCC]'
+                    : 'text-[#788C5D]'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                {avatarState}
               </span>
             </div>
 
-            {/* Official Voxel Mascot Visual Card */}
+            {/* Reactive Responder Voxel Companion */}
             <div className="flex flex-col items-center text-center space-y-3">
               <div className="relative group">
                 <div
-                  className={`w-28 h-28 rounded-2xl overflow-hidden border-2 transition-all duration-300 shadow-xl bg-slate-800 ${
-                    mascotStatus === 'THINKING'
-                      ? 'border-indigo-400 shadow-[0_0_25px_rgba(99,102,241,0.5)] scale-105'
-                      : 'border-white/15'
+                  className={`w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all duration-300 shadow-sm bg-white dark:bg-[#242320] ${
+                    avatarState === 'THINKING'
+                      ? 'border-[#CC785C] ring-4 ring-[#CC785C]/20 scale-105'
+                      : avatarState === 'USING_TOOL'
+                      ? 'border-[#788C5D] ring-4 ring-[#788C5D]/20 scale-105'
+                      : avatarState === 'STREAMING'
+                      ? 'border-[#6A9BCC] ring-4 ring-[#6A9BCC]/20 animate-pulse'
+                      : 'border-[#E8E6DC] dark:border-[#302E2B]'
                   }`}
                 >
                   <img
@@ -799,38 +1131,44 @@ export const AgentChatSuite: React.FC = () => {
                     }}
                   />
                 </div>
-                <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-md text-[9px] font-mono font-bold bg-indigo-600 text-white border border-indigo-400/40 shadow-sm">
-                  AI Rig
+                <span className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-md text-[9px] font-mono font-semibold bg-[#CC785C] text-white shadow-xs">
+                  {avatarState === 'USING_TOOL' ? activeToolName : 'AI Responder'}
                 </span>
               </div>
 
-              {/* Reactive Mascot Speech */}
-              <div className="p-3 rounded-xl bg-slate-950/80 border border-white/10 text-[11px] text-slate-300 leading-relaxed font-sans">
+              {/* Speech bubble */}
+              <div className="p-3 rounded-xl bg-white dark:bg-[#1D1C1A] border border-[#E8E6DC] dark:border-[#302E2B] text-[11px] text-[#5E5D59] dark:text-[#B0AEA5] leading-relaxed font-sans shadow-xs">
                 "{mascotSpeech}"
               </div>
             </div>
 
-            {/* Active Context Card */}
-            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 text-xs">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-indigo-400 font-semibold">
-                Active Channel Specs
+            {/* Subagent & Tools Active Card */}
+            <div className="p-4 rounded-xl bg-white dark:bg-[#1D1C1A] border border-[#E8E6DC] dark:border-[#302E2B] space-y-2.5 text-xs shadow-xs">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-[#CC785C] font-semibold">
+                Autonomous Subagents
               </div>
-              <div className="flex items-center justify-between text-slate-300">
-                <span>Architecture</span>
-                <span className="font-mono text-[10px] text-slate-400">Agno OS 3.1</span>
-              </div>
-              <div className="flex items-center justify-between text-slate-300">
-                <span>Memory Isolation</span>
-                <span className="font-mono text-[10px] text-emerald-400 font-semibold">SQLite WAL</span>
-              </div>
-              <div className="flex items-center justify-between text-slate-300">
-                <span>Zero-Knowledge</span>
-                <span className="font-mono text-[10px] text-indigo-300 font-semibold">PBKDF2 Fernet</span>
+              <div className="space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between text-[#141413] dark:text-[#FAF9F5]">
+                  <span>Virtual Browser Sandbox</span>
+                  <span className="font-mono text-[9px] text-[#788C5D] font-semibold">ARMED</span>
+                </div>
+                <div className="flex items-center justify-between text-[#141413] dark:text-[#FAF9F5]">
+                  <span>Multimodal Vision OCR</span>
+                  <span className="font-mono text-[9px] text-[#788C5D] font-semibold">ACTIVE</span>
+                </div>
+                <div className="flex items-center justify-between text-[#141413] dark:text-[#FAF9F5]">
+                  <span>Voice STT Transcriber</span>
+                  <span className="font-mono text-[9px] text-[#6A9BCC] font-semibold">READY</span>
+                </div>
+                <div className="flex items-center justify-between text-[#141413] dark:text-[#FAF9F5]">
+                  <span>Zero-Knowledge Vault</span>
+                  <span className="font-mono text-[9px] text-[#CC785C] font-semibold">SEALED</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-white/10 text-[10px] font-mono text-slate-500 text-center">
+          <div className="pt-4 border-t border-[#E8E6DC] dark:border-[#302E2B] text-[10px] font-mono text-[#87867F] text-center">
             JellyFlex 2.0 • 127.0.0.1:8000
           </div>
         </aside>
@@ -838,6 +1176,7 @@ export const AgentChatSuite: React.FC = () => {
 
       {/* MODALS */}
       {showBYOKModal && <SecurityAndBYOKModal onClose={() => setShowBYOKModal(false)} />}
+      <DailyBriefModal isOpen={showDailyBriefModal} onClose={() => setShowDailyBriefModal(false)} />
 
       <CreateAgentModal
         isOpen={showCreateAgentModal}

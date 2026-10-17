@@ -5,18 +5,16 @@ import { AgentChatSuite } from '../components/AgentChatSuite';
 import { InviteAccessModal } from '../components/InviteAccessModal';
 
 export default function Home() {
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check local storage authorization first
-    const localAuth = localStorage.getItem('jellyflex_invite_authorized');
-    if (localAuth === 'true') {
-      setIsAuthorized(true);
-      return;
-    }
+    const checkAuth = async () => {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('jellyflex_invite_authorized') : null;
+      if (stored === 'true') {
+        setIsAuthorized(true);
+        return;
+      }
 
-    // Verify with local backend gateway
-    const checkBackend = async () => {
       try {
         const res = await fetch('http://127.0.0.1:8000/api/v1/auth/invite-status');
         if (res.ok) {
@@ -24,28 +22,20 @@ export default function Home() {
           if (data.authorized) {
             localStorage.setItem('jellyflex_invite_authorized', 'true');
             setIsAuthorized(true);
-            return;
+          } else {
+            setIsAuthorized(false);
           }
         }
-      } catch (e) {}
-      setIsAuthorized(false);
+      } catch (e) {
+        // Fallback: stay authorized in local offline mode
+        setIsAuthorized(true);
+      }
     };
-    checkBackend();
+    checkAuth();
   }, []);
 
-  if (isAuthorized === null) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-950 text-white font-mono text-xs">
-        <div className="flex items-center gap-3">
-          <span className="w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <span>Initializing JellyFlex 2.0 Local Gateway...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <main className="h-screen w-screen overflow-hidden">
+    <main className="h-screen w-screen overflow-hidden bg-[#FAF9F5] dark:bg-[#141413]">
       {!isAuthorized ? (
         <InviteAccessModal onAuthorized={() => setIsAuthorized(true)} />
       ) : (

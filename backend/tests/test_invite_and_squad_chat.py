@@ -104,3 +104,57 @@ async def test_multi_agent_coordinator_chat_and_squad():
 
         group_hist = store.get_conversation_history("conv-test-squad")
         assert len(group_hist) == 3  # 1 user + 2 agents
+
+
+def test_multimodal_vision_and_document_analyzer():
+    from agents.vision_analyzer import MultimodalVisionAnalyzer
+
+    analyzer = MultimodalVisionAnalyzer()
+
+    # Image test
+    sample_img_bytes = b"\x89PNG\r\n\x1a\n" + b"fake-png-content" * 20
+    img_res = analyzer.inspect_file("carousel_cover.png", sample_img_bytes, "Check visual hierarchy")
+    assert img_res["status"] == "analyzed"
+    assert img_res["media_type"] == "image"
+    assert "visual_stopping_power" in img_res["retention_evaluation"]
+
+    # Video test
+    sample_vid_bytes = b"fake-mp4-video-content" * 50
+    vid_res = analyzer.inspect_file("reels_cut.mp4", sample_vid_bytes)
+    assert vid_res["media_type"] == "video"
+    assert len(vid_res["pacing_beats"]) >= 3
+
+    # Document test
+    sample_doc_bytes = b"# Clean-Room Architecture Specification\n7 OpenClaw Subsystems in Python"
+    doc_res = analyzer.inspect_file("architecture.md", sample_doc_bytes)
+    assert doc_res["media_type"] == "document"
+    assert doc_res["line_count"] >= 2
+
+
+def test_voice_audio_transcription():
+    from agents.voice_transcriber import VoiceAudioTranscriber
+
+    transcriber = VoiceAudioTranscriber()
+    audio_sample = b"RIFF" + b"\x00" * 4000
+    res = transcriber.transcribe_audio_blob(audio_sample)
+    assert res["status"] == "success"
+    assert len(res["transcription"]) > 10
+    assert res["confidence"] >= 0.9
+
+
+@pytest.mark.asyncio
+async def test_virtual_browser_stealth_execution():
+    from apps_registry.stealth_browser import StealthBrowserHumanizer
+
+    humanizer = StealthBrowserHumanizer()
+
+    # Upload action
+    upload_res = await humanizer.execute_virtual_browser_action(
+        action="upload_media",
+        target_url="https://instagram.com/creator/upload",
+        media_path="artifacts/video.mp4",
+        caption="Autonomous 2026 AI Agent",
+    )
+    assert upload_res["status"] == "MEDIA_UPLOADED_SUCCESS"
+    assert upload_res["viewport"]["width"] == 1280
+    assert "HUMAN" in upload_res["stealth_verification"]["anti_bot_detection"].upper()

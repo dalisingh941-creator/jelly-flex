@@ -10,22 +10,55 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        canvas: {
-          dark: "#06080e",
-          light: "#f8fafc",
+        parchment: "#FAF9F5",
+        linen: "#F5F4ED",
+        oat: "#F0EFEA",
+        warmborder: "#E8E6DC",
+        warmcharcoal: "#141413",
+        warmmuted: "#5E5D59",
+        warmdim: "#87867F",
+        terracotta: {
+          DEFAULT: "#CC785C",
+          hover: "#D97757",
+          light: "rgba(204, 120, 92, 0.12)",
         },
-        surface: {
-          dark: "rgba(13, 18, 30, 0.72)",
-          light: "rgba(255, 255, 255, 0.8)",
+        olive: {
+          DEFAULT: "#788C5D",
+          light: "rgba(120, 140, 93, 0.12)",
         },
-        elevated: {
-          dark: "rgba(20, 27, 45, 0.85)",
-          light: "rgba(241, 245, 249, 0.9)",
+        anthropicSlate: {
+          DEFAULT: "#6A9BCC",
+          light: "rgba(106, 155, 204, 0.12)",
         },
+        darkcharcoal: "#141413",
+        darksurface: "#1D1C1A",
+        darksidebar: "#191816",
+        darksubtle: "#242320",
+        darkborder: "#302E2B",
       },
       fontFamily: {
-        sans: ["Inter", "-apple-system", "sans-serif"],
-        mono: ["JetBrains Mono", "Geist Mono", "monospace"],
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"Segoe UI"',
+          "Roboto",
+          '"Helvetica Neue"',
+          "Arial",
+          "sans-serif",
+        ],
+        serif: [
+          '"Newsreader"',
+          "Georgia",
+          '"Times New Roman"',
+          "serif",
+        ],
+        mono: [
+          '"JetBrains Mono"',
+          '"Geist Mono"',
+          "ui-monospace",
+          "SFMono-Regular",
+          "monospace",
+        ],
       },
     },
   },
