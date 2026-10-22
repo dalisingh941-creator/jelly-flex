@@ -19,6 +19,7 @@ import {
   X,
   Code,
   CheckCircle2,
+  Lock,
 } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 import { CreateAgentModal } from './CreateAgentModal';
@@ -223,7 +224,9 @@ const SEED_MESSAGES: ChatMessage[] = [
   },
 ];
 
-export const AgentChatSuite: React.FC = () => {
+export const AgentChatSuite: React.FC<{ onLockWorkspace?: () => void }> = ({
+  onLockWorkspace,
+}) => {
   const [agents, setAgents] = useState<AgentItem[]>(DEFAULT_AGENTS);
   const [squads, setSquads] = useState<SquadItem[]>(DEFAULT_SQUADS);
   const [activeType, setActiveType] = useState<'agent' | 'squad'>('squad');
@@ -231,6 +234,7 @@ export const AgentChatSuite: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>(SEED_MESSAGES);
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [useMascotCompanionAvatar, setUseMascotCompanionAvatar] = useState(false);
 
   // Panel Toggles
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
@@ -505,15 +509,24 @@ export const AgentChatSuite: React.FC = () => {
             <Menu className="w-4 h-4" />
           </button>
 
+          {/* Official Brand Mascot in Top-Left Navigation */}
           <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg overflow-hidden border border-[#E8E6DC] bg-white shrink-0">
+              <img
+                src="/brand-mascot.png"
+                alt="JellyFlex Mascot"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/mascot.jpg';
+                }}
+              />
+            </div>
             <span className="font-semibold text-xs tracking-tight text-[#1A1915]">JellyFlex</span>
-            <span className="text-xs text-[#9E9C94]">/</span>
-            <span className="text-xs text-[#6B6960] font-medium">{currentTitle}</span>
           </div>
         </div>
 
-        {/* Center Current Agent / Squad */}
-        <div className="hidden sm:flex items-center gap-2">
+        {/* Center Current Agent / Squad Name in clean sans-serif */}
+        <div className="flex items-center gap-2">
           <div
             className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] text-white font-bold"
             style={{ backgroundColor: currentColor }}
@@ -523,8 +536,19 @@ export const AgentChatSuite: React.FC = () => {
           <span className="text-xs font-medium text-[#1A1915]">{currentTitle}</span>
         </div>
 
-        {/* Right Action Icons: Settings Gear & Right Panel Toggle */}
+        {/* Right Action Icons: Lock Vault, Settings Gear & Right Panel Toggle */}
         <div className="flex items-center gap-1.5">
+          {onLockWorkspace && (
+            <button
+              type="button"
+              onClick={onLockWorkspace}
+              className="p-1.5 rounded-lg text-[#6B6960] hover:text-[#CC785C] hover:bg-[#FAF9F5] transition-colors cursor-pointer"
+              title="Lock Hardware Vault"
+            >
+              <Lock className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setShowSettingsModal(true)}
@@ -570,62 +594,9 @@ export const AgentChatSuite: React.FC = () => {
               </button>
             </div>
 
-            {/* Conversation History List */}
+            {/* Conversation History List & Sections */}
             <div className="flex-1 overflow-y-auto p-2 space-y-4">
-              {/* Section: Squads */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between px-2 pt-1 pb-1">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#9E9C94] font-medium">
-                    Squads
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateSquadModal(true)}
-                    className="text-[10px] text-[#CC785C] hover:underline font-mono"
-                  >
-                    + New
-                  </button>
-                </div>
-
-                {squads.map((squad) => {
-                  const isSelected = activeType === 'squad' && activeId === squad.id;
-                  return (
-                    <button
-                      key={squad.id}
-                      type="button"
-                      onClick={() => {
-                        setActiveType('squad');
-                        setActiveId(squad.id);
-                      }}
-                      className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
-                        isSelected ? 'bg-[#FAF9F5] border border-[#E8E6DC]' : 'hover:bg-[#FAF9F5]/60 border border-transparent'
-                      }`}
-                    >
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-2xs"
-                        style={{ backgroundColor: squad.color }}
-                      >
-                        {squad.initial}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-xs text-[#1A1915] truncate">
-                            {squad.name}
-                          </span>
-                          <span className="text-[10px] text-[#9E9C94] font-mono shrink-0 ml-1">
-                            {squad.date || 'Oct 17'}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-[#6B6960] truncate">
-                          {squad.lastMessage || squad.description}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Section: Agents */}
+              {/* Section Divider: Agents */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between px-2 pt-1 pb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#9E9C94] font-medium">
@@ -677,6 +648,59 @@ export const AgentChatSuite: React.FC = () => {
                   );
                 })}
               </div>
+
+              {/* Section Divider: Squads */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between px-2 pt-1 pb-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#9E9C94] font-medium">
+                    Squads
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateSquadModal(true)}
+                    className="text-[10px] text-[#CC785C] hover:underline font-mono"
+                  >
+                    + New
+                  </button>
+                </div>
+
+                {squads.map((squad) => {
+                  const isSelected = activeType === 'squad' && activeId === squad.id;
+                  return (
+                    <button
+                      key={squad.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveType('squad');
+                        setActiveId(squad.id);
+                      }}
+                      className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-all cursor-pointer ${
+                        isSelected ? 'bg-[#FAF9F5] border border-[#E8E6DC]' : 'hover:bg-[#FAF9F5]/60 border border-transparent'
+                      }`}
+                    >
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-2xs"
+                        style={{ backgroundColor: squad.color }}
+                      >
+                        {squad.initial}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-xs text-[#1A1915] truncate">
+                            {squad.name}
+                          </span>
+                          <span className="text-[10px] text-[#9E9C94] font-mono shrink-0 ml-1">
+                            ({squad.member_ids.length} members)
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-[#6B6960] truncate">
+                          {squad.lastMessage || squad.description}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Bottom: User Profile & BYOK Link */}
@@ -688,14 +712,27 @@ export const AgentChatSuite: React.FC = () => {
                 <div className="text-xs font-medium text-[#1A1915]">Anurag Singh</div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowSettingsModal(true)}
-                className="text-[11px] font-mono text-[#788C5D] hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>BYOK Vault</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSettingsModal(true)}
+                  className="text-[11px] font-mono text-[#788C5D] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>BYOK Vault</span>
+                </button>
+
+                {onLockWorkspace && (
+                  <button
+                    type="button"
+                    onClick={onLockWorkspace}
+                    className="p-1 rounded text-[#9E9C94] hover:text-[#CC785C] transition-colors cursor-pointer"
+                    title="Lock Vault"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </aside>
         )}
@@ -973,12 +1010,25 @@ export const AgentChatSuite: React.FC = () => {
             {/* Current Agent Profile Card */}
             <div className="p-4 rounded-xl bg-[#FAF9F5] border border-[#E8E6DC] space-y-3">
               <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm text-white font-bold"
-                  style={{ backgroundColor: currentColor }}
-                >
-                  {currentInitial}
-                </div>
+                {useMascotCompanionAvatar ? (
+                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#E8E6DC] bg-white shrink-0 p-0.5">
+                    <img
+                      src="/brand-mascot.png"
+                      alt="JellyFlex Mascot Companion"
+                      className="w-full h-full object-cover rounded-lg"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = '/mascot.jpg';
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm text-white font-bold"
+                    style={{ backgroundColor: currentColor }}
+                  >
+                    {currentInitial}
+                  </div>
+                )}
                 <div>
                   <div className="font-semibold text-xs text-[#1A1915]">{currentTitle}</div>
                   <div className="text-[10px] text-[#6B6960] font-mono">
@@ -989,6 +1039,18 @@ export const AgentChatSuite: React.FC = () => {
               <p className="text-[11px] text-[#6B6960] leading-relaxed">
                 {activeType === 'squad' ? activeSquad?.description : activeAgent?.persona}
               </p>
+
+              {/* Companion Avatar Selector Option */}
+              <div className="pt-1 border-t border-[#E8E6DC]/60 flex items-center justify-between text-[11px]">
+                <span className="text-[#6B6960]">Companion Avatar:</span>
+                <button
+                  type="button"
+                  onClick={() => setUseMascotCompanionAvatar(!useMascotCompanionAvatar)}
+                  className="px-2 py-0.5 rounded-lg bg-white border border-[#E8E6DC] text-[10px] font-mono text-[#CC785C] hover:bg-[#FAF9F5] transition-colors cursor-pointer"
+                >
+                  {useMascotCompanionAvatar ? 'Voxel Mascot' : 'Letter Avatar'}
+                </button>
+              </div>
             </div>
 
             {/* Daily Brief Button (Feature trigger in companion panel) */}

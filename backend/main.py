@@ -9,7 +9,7 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -18,6 +18,7 @@ from typing import Dict, Any, Optional, List
 from security.fernet_vault import HardwareFernetVault
 from security.gateway_guard import TrustedGatewayGuard
 from security.byok_manager import BYOKVaultManager
+from security.master_auth import MasterAuthManager
 from security.uninstaller_engine import CleanUninstallerAndShredder
 from agents.lane_queue import OpenClawLaneQueue
 from agents.orchestrator import JellyFlexOrchestrator
@@ -73,6 +74,7 @@ gdrive_sync = GoogleDriveCipherSync(vault=vault)
 social_registry = OmniSocialRegistry()
 agno_os_manager = AgnoOSCoreManager(db_path="backend/data/agno_os.db")
 agno_os_manager.mount_to_fastapi(app)
+master_auth = MasterAuthManager(db_path=vault.db_path)
 invite_auth = InviteCodeAuthManager(db_path=vault.db_path)
 agent_store = AgentManagerStore(db_path=vault.db_path)
 chat_coordinator = MultiAgentChatCoordinator(
@@ -124,6 +126,7 @@ class WaterfallRequest(BaseModel):
     channels: Optional[List[str]] = None
 
 
+@app.get("/health")
 @app.get("/api/v1/health")
 async def health_check():
     return {
@@ -359,8 +362,83 @@ class SquadChatRequest(BaseModel):
     conversation_id: Optional[str] = None
 
 
+class AuthSetupRequest(BaseModel):
+    passcode: str
+    confirm_passcode: Optional[str] = None
+
+
+class AuthLoginRequest(BaseModel):
+    passcode: str
+
+
+class AuthRecoverRequest(BaseModel):
+    recovery_seed: str
+    new_passcode: str
+
+
 class InviteVerifyRequest(BaseModel):
     code: str
+
+
+@app.post("/api/v1/auth/setup")
+async def setup_master_passcode(req: AuthSetupRequest):
+    if req.confirm_passcode and req.passcode != req.confirm_passcode:
+        raise HTTPException(status_code=400, detail="Passcodes do not match.")
+    try:
+        res = master_auth.setup_passcode(req.passcode)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/auth/login")
+async def login_master_passcode(req: AuthLoginRequest):
+    try:
+        res = master_auth.login(req.passcode)
+        if res.get("status") == "error":
+            raise HTTPException(status_code=401, detail=res["message"])
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/auth/status")
+async def get_auth_status(
+    authorization: Optional[str] = Header(None),
+    x_session_token: Optional[str] = Header(None),
+):
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:].strip()
+    elif x_session_token:
+        token = x_session_token.strip()
+    return master_auth.get_status(token=token)
+
+
+@app.post("/api/v1/auth/lock")
+async def lock_workspace():
+    return master_auth.lock()
+
+
+@app.post("/api/v1/auth/recover")
+async def recover_master_passcode(req: AuthRecoverRequest):
+    try:
+        res = master_auth.recover_with_seed(req.recovery_seed, req.new_passcode)
+        if res.get("status") == "error":
+            raise HTTPException(status_code=401, detail=res["message"])
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/v1/auth/invite-status")
@@ -411,6 +489,8 @@ async def get_chat_history(conversation_id: str):
 async def handle_agent_chat(req: AgentChatRequest):
     if panic_locked:
         raise HTTPException(status_code=403, detail="System is in PANIC_LOCK mode.")
+    if master_auth.is_setup() and not master_auth._is_unlocked:
+        raise HTTPException(status_code=401, detail="Hardware BYOK vault is locked. Please enter Master Passcode to unlock.")
     await broadcast_state("THINKING", f"Routing message to {req.agent_id}...")
     try:
         reply = await chat_coordinator.chat_one_on_one(
@@ -429,6 +509,8 @@ async def handle_agent_chat(req: AgentChatRequest):
 async def handle_squad_chat(req: SquadChatRequest):
     if panic_locked:
         raise HTTPException(status_code=403, detail="System is in PANIC_LOCK mode.")
+    if master_auth.is_setup() and not master_auth._is_unlocked:
+        raise HTTPException(status_code=401, detail="Hardware BYOK vault is locked. Please enter Master Passcode to unlock.")
     await broadcast_state("THINKING", f"Coordinating squad {req.squad_id} collaboration...")
     try:
         replies = await chat_coordinator.chat_squad_group(

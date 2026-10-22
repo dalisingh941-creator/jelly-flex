@@ -101,7 +101,7 @@ function createMainWindow() {
     minHeight: 680,
     title: 'JellyFlex 2.0 — Conversational AI Agent Suite',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
-    backgroundColor: '#020617',
+    backgroundColor: '#FAF9F5',
     autoHideMenuBar: true,
     show: false,
     webPreferences: {
@@ -149,7 +149,7 @@ app.whenReady().then(async () => {
   try {
     startBackend();
     console.log('[JellyFlex Desktop] Waiting for Python FastAPI Gateway...');
-    await waitForGateway('http://127.0.0.1:8000/api/v1/health', 25000);
+    await waitForGateway('http://127.0.0.1:8000/health', 25000);
     console.log('[JellyFlex Desktop] Python Gateway is HEALTHY.');
 
     // Check if frontend already running on 3000
